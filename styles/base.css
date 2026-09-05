@@ -1,0 +1,165 @@
+@import url('https://googleapis.com');
+
+:root {
+    --primary-color: #0d47a1;
+    /* Bleu foncé similaire à l'exemple */
+    --secondary-color: #1565c0;
+    --accent-color: #ffb300;
+
+    --bg-color: #ffffff;
+    --card-bg: #fcfcfc;
+    --text-color: #333333;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f2f5;
+    color: var(--text-color);
+}
+
+header {
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+    padding: 15px 0 0 0;
+}
+
+
+#course-title {
+    display: block;
+    font-family: 'Ubuntu', sans-serif;
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding-bottom: 15px;
+}
+
+
+nav {
+    background-color: #263238;
+
+}
+
+nav ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+
+    justify-content: space-around;
+}
+
+nav ul li {
+    flex: 1;
+    text-align: center;
+}
+
+nav ul li a {
+    display: block;
+    color: white;
+    text-decoration: none;
+    padding: 12px 20px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+
+}
+
+nav ul li a:hover {
+    background-color: var(--secondary-color);
+    color: var(--accent-color);
+}
+
+
+main {
+    max-width: 1000px;
+
+    margin: 30px auto;
+
+    padding: 0 20px;
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+}
+
+h1 {
+    grid-column: 1 / -1;
+
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.card {
+    background-color: var(--card-bg);
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.card h2 {
+    background-color: var(--secondary-color);
+    color: white;
+    margin: 0;
+    padding: 12px;
+    font-size: 1.2rem;
+    text-align: center;
+    font-family: 'Ubuntu', sans-serif;
+}
+
+.card p,
+.card ul {
+    padding: 15px;
+    line-height: 1.6;
+}
+
+.card img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 15px auto;
+    border-radius: 4px;
+}
+
+
+.card ul {
+    list-style-position: inside;
+    padding-left: 25px;
+}
+
+.card ul li {
+    margin-bottom: 10px;
+}
+
+.card ul li a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.card ul li a:hover {
+    text-decoration: underline;
+}
+
+
+footer {
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+footer p {
+    margin: 5px 0;
+}
+
+footer span,
+footer #lastModified {
+    color: var(--accent-color);
+    font-weight: bold;
+}
