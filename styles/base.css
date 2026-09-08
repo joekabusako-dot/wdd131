@@ -1,12 +1,14 @@
 :root {
     --primary-color: #0d47a1;
-    /* Bleu foncé similaire à l'exemple */
+
     --secondary-color: #1565c0;
     --accent-color: #ffb300;
 
     --bg-color: #ffffff;
     --card-bg: #fcfcfc;
     --text-color: #333333;
+    --body-bg: #f0f2f5;
+
 }
 
 body {
@@ -14,13 +16,13 @@ body {
     font-weight: 500;
     margin: 0;
     padding: 0;
-    background-color: #f0f2f5;
+    background-color: var(--body-bg);
     color: var(--text-color);
 }
 
 header {
     background-color: var(--primary-color);
-    color: white;
+    color: var(--bg-color);
     text-align: center;
     padding: 15px 0 0 0;
 }
@@ -56,7 +58,7 @@ nav ul li {
 
 nav ul li a {
     display: block;
-    color: white;
+    color: var(--bg-color);
     text-decoration: none;
     padding: 12px 20px;
     font-weight: 500;
@@ -100,7 +102,7 @@ h1 {
 
 .card h2 {
     background-color: var(--secondary-color);
-    color: white;
+    color: var(--bg-color);
     margin: 0;
     padding: 12px;
     font-size: 1.2rem;
@@ -145,7 +147,7 @@ h1 {
 
 footer {
     background-color: var(--primary-color);
-    color: white;
+    color: var(--bg-color);
     text-align: center;
     padding: 20px;
     margin-top: 40px;
