@@ -8,6 +8,9 @@
     --card-bg: #fcfcfc;
     --text-color: #333333;
     --body-bg: #f0f2f5;
+    --shadow-cl: #0000000d;
+    --border-color: #e0e0e0;
+    --bgb-color: #263238;
 
 }
 
@@ -38,7 +41,7 @@ header {
 
 
 nav {
-    background-color: #263238;
+    background-color: var(--bgb-color);
 
 }
 
@@ -94,9 +97,9 @@ h1 {
 
 .card {
     background-color: var(--card-bg);
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 6px var(--shadow-cl);
     overflow: hidden;
 }
 
