@@ -1,8 +1,8 @@
 :root {
     --nv-color: rgb(0 0 70);
-    --bg-color: rgb(255, 255, 255);
+    --bg-color: rgb(255 255 255);
     --h-color: rgb(0 0 0);
-    --or-color: rgb(255, 100, 0);
+    --or-color: rgb(255 100 0);
     --decoration-tx: none;
     --text-dec: underline;
     --bk-color: transparent;
