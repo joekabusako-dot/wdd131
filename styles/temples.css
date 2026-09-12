@@ -2,6 +2,7 @@
     --nv-color: rgb(0 0 70);
     --bg-color: rgb(255 255 255/0.8);
     --h-color: rgb(0 0 0);
+    --or-color: rgb(255, 100, 0);
 }
 
 
@@ -27,7 +28,7 @@ nav ul a {
 }
 
 nav ul a:hover {
-    color: rgb(255, 100, 0);
+    color: var(--or-color);
     text-decoration: underline;
     /*this makes the navigation to change the color and get underlined when the mouse passes by.*/
 }
@@ -125,6 +126,6 @@ footer {
     display: block;
     width: 100%;
     height: 4px;
-    background-color: white;
+    background-color: var(--bg-color);
     border: 2px;
 }
