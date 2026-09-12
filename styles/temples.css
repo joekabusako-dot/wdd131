@@ -1,11 +1,24 @@
 :root {
     --nv-color: rgb(0 0 70);
-    --bg-color: rgb(255 255 255/0.7);
+    --bg-color: rgb(255, 255, 255);
     --h-color: rgb(0 0 0);
     --or-color: rgb(255, 100, 0);
     --decoration-tx: none;
     --text-dec: underline;
     --bk-color: transparent;
+
+}
+
+
+
+header {
+    background-color: var(--nv-color);
+    /* Fond bleu sombre global */
+    display: flex;
+    justify-content: space-between;
+    /* Titre à gauche, menu à droite */
+    align-items: center;
+    padding: 8px;
 
 }
 
@@ -21,7 +34,7 @@ nav ul {
     border: 1.5px solid var(--nv-color);
     list-style-type: none;
     margin: 0;
-    padding: 20px;
+    padding: 10px;
 
 
 }
@@ -67,10 +80,9 @@ main {
 
 
 h1 {
-    position: absolute;
+
     color: var(--bg-color);
-    left: 15px;
-    top: 6px;
+
 }
 
 h2 {
