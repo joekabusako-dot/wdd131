@@ -1,8 +1,12 @@
 :root {
     --nv-color: rgb(0 0 70);
-    --bg-color: rgb(255 255 255/0.8);
+    --bg-color: rgb(255 255 255/0.7);
     --h-color: rgb(0 0 0);
     --or-color: rgb(255, 100, 0);
+    --decoration-tx: none;
+    --text-dec: underline;
+    --bk-color: transparent;
+
 }
 
 
@@ -24,12 +28,12 @@ nav ul {
 
 nav ul a {
     color: var(--bg-color);
-    text-decoration: none;
+    text-decoration: var(--decoration-tx);
 }
 
 nav ul a:hover {
     color: var(--or-color);
-    text-decoration: underline;
+    text-decoration: var(--text-dec);
     /*this makes the navigation to change the color and get underlined when the mouse passes by.*/
 }
 
@@ -113,7 +117,7 @@ footer {
     /*size of the button*/
     width: 30px;
     height: 24px;
-    background: transparent;
+    background: var(--bk-color);
     border: none;
     cursor: pointer;
     padding: 0;
