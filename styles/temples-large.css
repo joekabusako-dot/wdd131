@@ -1,0 +1,37 @@
+@media screen and (min-width:760px) {
+
+
+
+
+    h1 {
+        font-size: 1.5rem;
+        color: white
+    }
+
+    .navigation {
+        display: flex;
+        list-style-type: none;
+        margin: 0;
+        padding: 1rem;
+        gap: 20px;
+    }
+
+    .navigation li {
+        display: block;
+        /*change state in small view*/
+
+    }
+
+
+    .navigation a {
+        color: white;
+        text-decoration: none;
+
+    }
+
+
+
+    #hamburger-btn {
+        display: none;
+    }
+}
