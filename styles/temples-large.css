@@ -10,10 +10,14 @@
 
     .navigation {
         display: flex;
+        flex-direction: row;
+
+        width: 100%;
+        background-color: rgb(0 0 70);
         list-style-type: none;
         margin: 0;
         padding: 1rem;
-        gap: 20px;
+        gap: 40px;
     }
 
     .navigation li {
