@@ -21,7 +21,7 @@ h1 {
 
 main {
     display: grid;
-    grid-template-columns: 1fr 300px;
+    grid-template-columns: 1fr 200px;
     gap: 20px;
 }
 
@@ -40,9 +40,10 @@ article p {
 
 
 .callout {
-    color: #777;
-    background-color: #000212;
+    color: #000;
+    background-color: #fdefde;
     padding: 16px;
+
 }
 
 footer {
@@ -53,9 +54,10 @@ footer {
 }
 
 .banner {
-    border: 1px solide #000;
-    background-color: #ffffff;
+    border: 1px solid #fefedd;
+    background-color: #fefedd;
     padding: 16px;
     text-align: center;
+    font-weight: 700;
 
 }
