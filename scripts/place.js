@@ -2,8 +2,8 @@
 window.addEventListener("DOMContentLoaded", () => {
 
     //a. Define static variables (from my html)
-    const currentTemp = 27; //In ℃ (must be <=10 for the calculation)
-    const currentWindspeed = 8; //In ℃(must be > 4.8 for the calculation)
+    const currentTemp = 5; //In ℃ (must be <=10 for the calculation)
+    const currentWindspeed = 15; //In ℃(must be > 4.8 for the calculation)
 
     //b. Selection of the HTML element where I will put the result
     const windChildElement = document.querySelector("#weather-chill");
@@ -14,7 +14,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 
         //if conditions are true, we call the functon and display result rounded
-        const result = calculateWindchill(currentTemp, currentWindspeed);
+        const result = calculateWindChill(currentTemp, currentWindspeed);
         if (windChildElement) {
             windChildElement.textContent = `${Math.round(result)} ℃`;
         }
