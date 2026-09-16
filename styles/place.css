@@ -1,0 +1,104 @@
+:root {
+    --hd-color: rgb(3 3 180);
+    --ft-color: rgb(133 22 3);
+    --under-hd: rgb(255 255 0);
+    --txt-color: rgb(0 0 0);
+    --hd-col: rgb(255 255 255);
+    --gr-color: rgb(255 255 255/0.8);
+}
+
+body {
+    margin: 0 auto;
+    padding: 0;
+    font-family: "Roboto", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-style: normal;
+    font-variation-settings:
+        "wdth" 100;
+
+
+}
+
+
+
+main {
+    position: relative;
+    border: 1px solid var(--under-hd);
+    background-color: var(--under-hd);
+    padding: 0;
+    margin: 0 auto;
+
+}
+
+
+
+#country-data {
+    position: absolute;
+    top: 110px;
+
+    left: 15px;
+    padding: 4px;
+    border: 1.5px dashed var(--hd-col);
+    background-color: var(--gr-color);
+    font-size: smaller;
+    font-weight: bold;
+
+
+}
+
+#country-data h2 {
+    border: 1px solid var(--ft-color);
+    background-color: var(--under-hd);
+    box-shadow: 4px 4px 4px 3px var(--ft-color);
+    text-align: center;
+}
+
+#weather {
+    position: absolute;
+    bottom: 16px;
+    right: 15px;
+    padding: 4px;
+    border: 1.5px dashed var(--hd-col);
+    background-color: var(--gr-color);
+    color: var(--txt-color);
+    font-size: smaller;
+    font-weight: bold;
+
+
+}
+
+#weather h2 {
+    border: 1px solid var(--ft-color);
+    background-color: var(--under-hd);
+    box-shadow: 4px 4px 4px 3px var(--ft-color);
+    text-align: center;
+}
+
+
+
+
+
+
+h1 {
+    color: var(--hd-col);
+    background-color: var(--hd-color);
+    border: 2px solid var(--hd-color);
+    padding: 20px;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 8;
+
+
+
+}
+
+
+footer {
+    color: var(--hd-col);
+    border: 2px solid var(--ft-color);
+    background-color: var(--ft-color);
+    padding: 10px;
+    text-align: center;
+
+}
