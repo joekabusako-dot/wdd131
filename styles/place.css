@@ -81,11 +81,7 @@ footer {
     margin-top: 0;
 }
 
-#country-data li {
-    padding-left: 0;
-    margin-top: 5px;
-    list-style-position: inside;
-}
+
 
 @media screen and (min-width:768px) {
 
