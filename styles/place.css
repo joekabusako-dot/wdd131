@@ -89,6 +89,14 @@ footer {
 @media screen and (min-width:768px) {
 
 
+    #weather img {
+        width: 50px;
+        height: auto;
+        margin: 5px auto;
+        display: block;
+    }
+
+
 
     .image-container {
 
