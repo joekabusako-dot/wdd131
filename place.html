@@ -20,60 +20,41 @@
     <header>
         <h1>Democratique Republic Of The Congo or DRC</h1>
     </header>
-
     <main>
-
-
-        <div>
-            <img src="images/okapi.webp" alt="okapi from Dr Congo">
+        <div class="image-container">
+            <!-- Remplacement des images de test par ton image webp valide pour éviter les bugs de chargement -->
+            <img src="images/okapi.webp" srcset="images/okapi.webp 500w, 
+                         images/okapi.webp 1000w, 
+                         images/okapi.webp 1500w" sizes="100vw" alt="okapi from Dr Congo">
         </div>
+
         <section id="country-data">
             <h2>Data</h2>
-
             <p>Area: 2 344 858 km</p>
             <p>Population: 111 million</p>
-
             <p>Capital: Kinshasa</p>
-
-            <div>Languages:
-
-                *Official = French
-                *National = Lingala, Swahili,
-                Kikongo & Tshiluba
-            </div>
-
-
-            <p>Currency: Congolse Franc(CDF)</p>
-
-
-            <div>
-
-                *UTC+1 = covers the west, Kinshasa included
-                *UTC = covers the east, Lubumashi include
-            </div>
-
-
+            <p><strong>Languages:</strong><br>Official: French<br>National: Lingala, Swahili, Kikongo & Tshiluba</p>
+            <p>Currency: Congolese Franc (CDF)</p>
+            <p><strong>Time Zones:</strong><br>UTC+1: covers the west, Kinshasa included<br>UTC: covers the east,
+                Lubumbashi
+                included</p>
             <p>Calling Code: +243</p>
-
             <p>Internet TLD: .cd</p>
-
-
-
         </section>
 
         <section id="weather">
-
             <h2>Weather</h2>
-            <img src="images/logoweather.svg" alt="a light rain weather">
-
+            <!-- Ajout d'une largeur pour éviter que le logo SVG ne devienne géant -->
+            <img src="images/logoweather.svg" alt="a light rain weather"
+                style="width: 50px; height: auto; margin: 5px auto; display: block;">
             <p>Temperature: 27℃</p>
             <p>Conditions: Light Rain</p>
-            <p>Wind: 5 mph(approx. 8 km/h)</p>
-            <p>Wind Chill: <span id="weather-chill">Calculation In Pogress...</span></p>
-
-
+            <p>Wind: 5 mph (approx. 8 km/h)</p>
+            <p>Wind Chill: <span id="weather-chill">Calculation In Progress...</span></p>
         </section>
     </main>
+
+
 
     <footer>
         <p>&copy;<span id="currentyear"></span> 👷‍♂️Joe Kabusako Iviti👷‍♂️ Congo-Kinshasa .All rights reserved.</p>

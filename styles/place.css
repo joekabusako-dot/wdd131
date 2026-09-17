@@ -26,6 +26,8 @@ main {
     background-color: var(--under-hd);
     padding: 0;
     margin: 0 auto;
+    height: auto;
+
 
 
 }
@@ -42,11 +44,13 @@ h1 {
 }
 
 
-div img {
+.image-container img {
+
     display: block;
     width: 100%;
     height: auto;
     margin-top: 10px;
+
 }
 
 #country-data,
@@ -59,12 +63,9 @@ div img {
     text-align: center;
     border: 1.5px dashed var(--txt-color);
 
-
 }
 
-#country-data {
-    margin-bottom: 5px;
-}
+
 
 
 footer {
@@ -75,15 +76,32 @@ footer {
     text-align: center;
 }
 
-
-#country-data h2,
-#weather h2 {
-    margin-top: 0;
+#country-data {
+    margin-bottom: 10px;
 }
 
 
 
+
+
+
+
 @media screen and (min-width:768px) {
+
+
+
+    .image-container {
+
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 1;
+    }
+
+
+
 
 
     #country-data {
