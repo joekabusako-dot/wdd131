@@ -1,0 +1,195 @@
+:root {
+    --nv-color: rgb(0 0 70);
+    --bg-color: rgb(255 255 255);
+    --h-color: rgb(0 0 0);
+    --or-color: rgb(255 100 0);
+    --decoration-tx: none;
+    --text-dec: underline;
+    --bk-color: transparent;
+    --gr-color: rgb(200 200 200);
+
+}
+
+header {
+    background-color: var(--nv-color);
+    /* Fond bleu sombre global */
+    display: flex;
+    justify-content: space-between;
+    /* Titre à gauche, menu à droite */
+    align-items: center;
+    padding: 10px 20px;
+    width: 100%;
+
+
+}
+
+h1 {
+
+    color: var(--bg-color);
+
+}
+
+.navigation a {
+    color: var(--bg-color);
+    text-decoration: var(--decoration-tx);
+    background-color: var(--nv-color);
+    text-align: left;
+    display: block;
+    width: 100%;
+    padding: 10px 10px;
+
+}
+
+.navigation a:hover {
+    color: var(--or-color);
+    text-decoration: var(--text-dec);
+    /*this makes the navigation to change the color and get underlined when the mouse passes by.*/
+}
+
+
+footer {
+    border: 1.5px solid var(--nv-color);
+    background-color: var(--nv-color);
+    color: var(--bg-color);
+    text-align: center;
+
+}
+
+#hamburger-btn.show::before {
+    content: "❎"
+}
+
+#hamburger-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    /*size of the button*/
+    width: 30px;
+    height: 24px;
+    background: var(--bk-color);
+    border: none;
+    cursor: pointer;
+
+
+}
+
+/*Draw the 3 bars due to the span tags*/
+#hamburger-btn span {
+    display: block;
+    width: 100%;
+    height: 4px;
+    background-color: var(--bg-color);
+    border-radius: 2px;
+}
+
+/*Draw the 3 bars due to the span tags*/
+
+
+
+.navigation.show {
+    display: flex;
+}
+
+
+
+
+.navigation {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    background-color: var(--nv-colorvcolor);
+    list-style-type: none;
+
+
+
+}
+
+#temple-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+#temple-list article {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f5f5f5;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+#temple-list img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: block;
+}
+
+#temple-list article h2,
+#temple-list article p {
+    margin: 0;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    font-size: medium;
+    text-align: center;
+}
+
+#temple-list article h2 {
+    padding-top: 0.8rem;
+    padding-bottom: 0.4rem;
+}
+
+#temple-list article p {
+    padding-bottom: 0.3rem;
+}
+
+#temple-list article p:last-child {
+    padding-bottom: 1rem;
+}
+
+@media screen and (min-width:760px) {
+
+
+
+
+    h1 {
+        font-size: 1.5rem;
+        color: rgb(255 255 255);
+    }
+
+    .navigation {
+        display: flex;
+        flex-direction: row;
+        position: static;
+        width: 100%;
+        background-color: rgb(0 0 70);
+        list-style-type: none;
+        margin: 0;
+        padding: 1rem;
+        gap: 40px;
+    }
+
+    .navigation li {
+        display: block;
+        /*change state in small view*/
+
+    }
+
+
+    .navigation a {
+        color: rgb(255 255 255);
+        text-decoration: none;
+
+    }
+
+    #hamburger-btn {
+        display: none;
+    }
+
+
+}
