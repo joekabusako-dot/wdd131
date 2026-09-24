@@ -7,6 +7,9 @@
     --text-dec: underline;
     --bk-color: transparent;
     --gr-color: rgb(200 200 200);
+    --bgd-color: rgb(245 245 254);
+    --box-col: rgba(0, 0, 0.15);
+
 
 }
 
@@ -27,6 +30,16 @@ h1 {
 
     color: var(--bg-color);
 
+}
+
+
+body {
+    font-family: "Roboto", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+    margin: 0 auto;
 }
 
 .navigation a {
@@ -116,11 +129,11 @@ footer {
 }
 
 #temple-list article {
-    border: 1px solid #ccc;
+    border: 1px solid var(--gr-color);
     border-radius: 10px;
     overflow: hidden;
-    background: #f5f5f5;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    background: var(--bgd-color);
+    box-shadow: 0 3px 8px var(--box-col);
 }
 
 #temple-list img {
