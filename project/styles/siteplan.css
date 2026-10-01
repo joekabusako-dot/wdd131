@@ -33,10 +33,12 @@ h1 {
     border: 1px solid var(--head-color);
     background-color: var(--head-color);
     color: var(--bg-color);
-    padding: 16px;
+    padding: 20px;
     font-family: montserrat, sans-serif;
     text-align: end;
     border-top-right-radius: 25px;
+    font-size: small;
+
 }
 
 section h2 {
@@ -105,5 +107,16 @@ footer p {
         height: auto;
         display: block;
         margin: 0 auto;
+    }
+
+    h1 {
+        border: 1px solid var(--head-color);
+        background-color: var(--head-color);
+        color: var(--bg-color);
+        padding: 20px;
+        font-family: montserrat, sans-serif;
+        text-align: end;
+        border-top-right-radius: 25px;
+        font-size: larger
     }
 }
