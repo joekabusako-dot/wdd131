@@ -14,6 +14,7 @@ header img {
     position: absolute;
     top: 10px;
     left: 4px;
+
 }
 
 
@@ -26,12 +27,7 @@ body {
     padding: 5px;
 }
 
-main {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
 
-}
 
 h1 {
     border: 1px solid var(--head-color);
@@ -68,4 +64,46 @@ footer {
 
 footer p {
     color: var(--bg-color)
+}
+
+
+#overview,
+#design {
+    position: static;
+    padding: 20px;
+    background-color: var(--gr-color);
+    color: var(--txt-color);
+    text-align: center;
+    border: 1.5px dashed var(--txt-color);
+}
+
+#design img {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+
+
+@media screen and (min-width:768px) {
+    main {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+
+    }
+
+    header img {
+        position: absolute;
+        top: 10px;
+        left: 4px;
+    }
+
+    #design img {
+        width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+    }
 }
