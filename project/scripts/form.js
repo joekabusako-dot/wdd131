@@ -1,20 +1,22 @@
 // Wait for the DOM to load completely
 document.addEventListener("DOMContentLoaded", () => {
 
-    // 1. dynaically display the current year for the copyright
+    // Display current year
     const currentYearSpan = document.getElementById("currentyear");
     if (currentYearSpan) {
         currentYearSpan.textContent = new Date().getFullYear();
     }
 
-    // 2. Display the date and the hour of the last modification of the document
+    // Display last modified date
     const lastModifiedParagraph = document.getElementById("lastModified");
     if (lastModifiedParagraph) {
-        lastModifiedParagraph.textContent = `Last Modification: ${document.lastModified}`;
+        lastModifiedParagraph.textContent =
+            `Last Modification: ${document.lastModified}`;
     }
+
 });
 
-
+// Product array required by the assignment
 const products = [
     {
         id: "fc-1888",
@@ -42,16 +44,3 @@ const products = [
         averagerating: 5.0
     }
 ];
-
-
-let reviewCount = localStorage.getItem("reviewCount");
-
-if (reviewCount === null) {
-    reviewCount = 0;
-}
-
-reviewCount++;
-
-localStorage.setItem("reviewCount", reviewCount);
-
-document.querySelector("#reviewCount").textContent = `${reviewCount}`;
