@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Review Form</title>
+
+    <meta name="description" content="Product review form page that is responsive in both small and larger views.">
+    <meta name="author" content="Joe Kabusako Iviti">
+    <link rel="stylesheet" href="styles/form.css">
+    <script src="scripts/form.js" defer></script>
+
+</head>
+
+<body>
+
+    <header>
+        <h1>Product Review</h1>
+    </header>
+
+    <main>
+
+        <form method="get" action="review.html">
+
+
+            <fieldset>
+
+
+
+                <label for="product-name">Product Name</label>
+
+                <select id="product-category" name="product-category" required>
+                    <option value="">Choose a Product Category</option>
+                    <option value="electronics">Electronics</option>
+                    <option value="clothing">Clothing</option>
+                    <option value="home-goods">Home Goods</option>
+
+                </select>
+
+                <div class="rating">
+
+                    <label for="rating">Overall Rating</label>
+                    <label>
+                        <input type="radio" id="star1" name="rating" value="1">
+                        ⭐
+                    </label>
+
+                    <label>
+                        <input type="radio" id="star2" name="rating" value="2">
+                        ⭐⭐
+                    </label>
+
+                    <label>
+                        <input type="radio" id="star3" name="rating" value="3">
+                        ⭐⭐⭐
+                    </label>
+
+                    <label>
+                        <input type="radio" id="star4" name="rating" value="4">
+                        ⭐⭐⭐⭐
+                    </label>
+
+                    <label>
+                        <input type="radio" id="star5" name="rating" value="5">
+                        ⭐⭐⭐⭐⭐
+                    </label>
+                </div>
+
+
+                <label for="dateof-installation">Date Of Installation</label>
+                <input type="date" id="dateof-installation" name="dateof-installation" required>
+
+
+                <div class="service">
+
+                    <label for="feature">Which features did you find useful in the product? (Check all that
+                        apply)</label>
+                    <label>
+                        <input type="checkbox" name="service" value="durability">
+                        Durability
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="service" value="ease-of-use">
+                        Ease of Use
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="service" value="performance">
+                        Performance
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="service" value="design">
+                        Design
+                    </label>
+
+                </div>
+
+                <label for="review">Write your review here(Optional)</label>
+                <textarea id="review" name="review" rows="4" cols="50"></textarea>
+
+                <label for="your-name">Your Name(Optional)</label>
+                <input type="text" id="your-name" name="your-name" required>
+
+                <button type="submit">Post Review</button>
+
+            </fieldset>
+        </form>
+
+    </main>
+
+
+    <footer>
+        <p>&copy;<span id="currentyear"></span> 👷‍♂️Joe Kabusako Iviti👷‍♂️ Congo-Kinshasa .All rights reserved.</p>
+        <p id="lastModified"></p>
+    </footer>
+</body>
+
+</html>
