@@ -106,8 +106,8 @@ footer {
 .service label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
 }
 
 input[type="checkbox"] {
