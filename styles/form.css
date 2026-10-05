@@ -113,3 +113,21 @@ footer {
 input[type="checkbox"] {
     width: auto;
 }
+
+
+@media screen and (max-width: 600px) {
+
+    h1,
+    form,
+    footer {
+        max-width: 95%;
+    }
+
+    form {
+        padding: 15px;
+    }
+
+    button[type="submit"] {
+        width: 100%;
+    }
+}
