@@ -31,42 +31,30 @@
                 <label for="product-name">Product Name</label>
 
                 <select id="product-name" name="product-category" required>
-                    <option value="">Choose a Product Category</option>
+                    <option value="" disabled selected>Select a Product ...</option>
                     <option value="electronics">Electronics</option>
                     <option value="clothing">Clothing</option>
                     <option value="home-goods">Home Goods</option>
-
                 </select>
 
                 <div class="rating">
+                    <p>Overall Rating</p>
 
-                    <label for="star1">Overall Rating</label>
-                    <label>
-                        <input type="radio" id="star1" name="rating" value="1" required>
+                    <input type="radio" id="star1" name="rating" value="1" required>
+                    <label for="star1">⭐</label>
 
-                    </label><label>⭐</label>
+                    <input type="radio" id="star2" name="rating" value="2">
+                    <label for="star2">⭐⭐</label>
 
-                    <label>
-                        <input type="radio" id="star2" name="rating" value="2" required>
+                    <input type="radio" id="star3" name="rating" value="3">
+                    <label for="star3">⭐⭐⭐</label>
 
-                    </label><label>⭐⭐</label>
+                    <input type="radio" id="star4" name="rating" value="4">
+                    <label for="star4">⭐⭐⭐⭐</label>
 
-                    <label>
-                        <input type="radio" id="star3" name="rating" value="3" required>
-
-                    </label><label>⭐⭐⭐</label>
-
-                    <label>
-                        <input type="radio" id="star4" name="rating" value="4" required>
-
-                    </label><label>⭐⭐⭐⭐</label>
-
-                    <label>
-                        <input type="radio" id="star5" name="rating" value="5" required>
-
-                    </label><label>⭐⭐⭐⭐⭐</label>
+                    <input type="radio" id="star5" name="rating" value="5">
+                    <label for="star5">⭐⭐⭐⭐⭐</label>
                 </div>
-
 
                 <label for="dateof-installation">Date Of Installation</label>
                 <input type="date" id="dateof-installation" name="dateof-installation" required>
