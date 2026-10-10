@@ -4,15 +4,12 @@
     --border-color: #ccc;
     --input-border: #aaa;
     --focus-color: #333;
-
     --border-radius: 5px;
     --border-radius-lg: 10px;
-
     --spacing-sm: 5px;
     --spacing-md: 10px;
     --spacing-lg: 20px;
     --spacing-xl: 25px;
-
     --max-width: 500px;
 }
 
@@ -122,6 +119,8 @@ input[type="checkbox"] {
     footer {
         max-width: 95%;
     }
+
+   
 
     form {
         padding: 15px;
