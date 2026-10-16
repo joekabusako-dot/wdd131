@@ -100,7 +100,7 @@ footer {
     width: 30px;
     height: 30px;
     background: var(--head-color);
-    border: none;
+    border: 1px solid var(--bg-color);
     cursor: pointer;
     padding: 3px;
     position: absolute;
