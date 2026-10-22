@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIJ Carrelage Pro</title>
+    <meta name="description"
+        content="KIJ Carrelage Pro, est un outil puissant pour les prestateurs du domaine de BTP qui aide à estimer les quantités et les prix pour les travaux de carrelage.">
+    <meta name="author" content="Ingénieur Joe Kabusako iviti">
+    <link rel="stylesheet" href="styles/tile.css">
+    <script src="scripts/tile.js" defer></script>
+
+</head>
+
+<body>
+    <header>
+        <h1>KIJ Carrelage Pro</h1>
+        <p>Le calculateur simple et agréé pour vos travaux de carrelage</p>
+    </header>
+
+    <main>
+        <h2>A. Calcul Des Carreaux</h2>
+
+        <section>
+            <h3>1. Nombre de pièces à carreler</h3>
+            <label for="nombrepieces">Nombre: </label>
+            <input type="number" id="nombrepieces" min="1" step="any">
+
+            <button type="button" id="ajouterpieces">Ajouter Les Pièces</button>
+            <div id="formulairespieces"></div>
+
+        </section>
+
+        <br><br>
+
+        <section>
+
+
+            <h3>2. Dimensions Pièces</h3>
+            <label for="longueurpiece">Longueur(m): </label>
+            <input type="number" id="longueurpiece" min="0" step="any">
+            <br><br>
+
+            <label for="largeurpiece">Largeur(m): </label>
+            <input type="number" id="largeurpiece" min="0" step="any">
+
+        </section>
+
+        <br><br>
+
+        <section>
+            <h3>3. Dimensons des Carreaux</h3>
+            <label for="longueurcarreau">Longeuer Carreaux(cm): </label>
+            <input type="number" id="longueurcarreau" min="0" step="any">
+            <br><br>
+
+            <label for="largeurcarreau">Largeur Carreau(cm): </label>
+            <input type="number" id="largeurcarreau" min="0" step="any">
+
+        </section>
+        <br>
+
+        <h2>B. Calcul Du Mortier De Pose </h2>
+
+        <section>
+            <h3>1. Epaisseur de La Couche De Pose</h3>
+            <label for="calculmortier">Epaisseur(m): </label>
+            <input type="number" id="calculmortier" min="0" step="any">
+
+        </section>
+        <br><br>
+
+        <button id="calculer">Calculer</button>
+        <p id="resultat">Résultat:</p>
+
+    </main>
+
+    <footer>
+        <p>&copy;<span id="currentyear"></span> 👷‍♂️Joe Kabusako Iviti👷‍♂️ Congo-Kinshasa .All rights reserved.</p>
+        <p id="lastModified"></p>
+    </footer>
+
+</body>
+
+</html>

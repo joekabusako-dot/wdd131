@@ -1,0 +1,51 @@
+:root {
+    --titre-col: rgb(0 0 0);
+    --butt-col: rgb(225 225 225);
+    --bgtitre-col: rgb(225 225 200);
+    --sectionbg-col: rgb(100 150 150);
+    --border-col: rgb(0 0 125);
+}
+
+
+body {
+    font-family: roboto, sans-serif;
+
+    margin: 0 auto;
+    padding: 0;
+    width: 500px;
+    height: auto;
+
+
+
+}
+
+h1 {
+    border: 0.5px solid var(--border-col);
+    text-align: center;
+    background-color: var(--sectionbg-col);
+    border-radius: 5px;
+}
+
+section {
+    border: 0.1px solid var(--border-col);
+    padding: 8px;
+    background-color: var(--bgtitre-col);
+    border-radius: 5px;
+}
+
+footer {
+    border: 1px solid var(--border-col);
+    background-color: var(--bgtitre-col);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+button {
+    color: var(--titre-col);
+    background-color: var(--butt-col);
+    border-radius: 5px;
+}
+
+input {
+    border-radius: 5px;
+}
