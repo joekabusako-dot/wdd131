@@ -30,7 +30,19 @@
             <button type="button" id="ajouterpieces">Ajouter Les Pièces</button>
             <div id="formulairespieces"></div>
 
-            <button type="button" id="calculersurfaces">Calculer Les Surfaces</button>
+            <label for="tauxpertes">Taux de pertes des carreaux :</label>
+
+            <select id="tauxpertes">
+                <option value="5">5 %</option>
+                <option value="10" selected>10 %</option>
+                <option value="15">15 %</option>
+                <option value="20">20 %</option>
+            </select>
+
+            <br><br>
+
+            <button type="button" id="calculersurfaces">Calculer les Surfaces</button>
+
             <p id="resultatsurface"></p>
 
         </section>
@@ -40,12 +52,12 @@
         <section>
 
 
-            <h3>2. Dimensions Pièces</h3>
-            <label for="longueurpiece">Longueur(m): </label>
+            <h3>2. Calcul des Faiences</h3>
+            <label for="longueurpiece">Longueur cumulée(m): </label>
             <input type="number" id="longueurpiece" min="0" step="any">
             <br><br>
 
-            <label for="largeurpiece">Largeur(m): </label>
+            <label for="largeurpiece">Hauteur Du plaquage(m): </label>
             <input type="number" id="largeurpiece" min="0" step="any">
 
         </section>

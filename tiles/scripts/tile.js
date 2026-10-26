@@ -175,9 +175,19 @@ document.addEventListener("DOMContentLoaded", () => {
             surfaceTotale += surface;
         });
 
-        // Display the total area
-        document.getElementById("resultatsurface").textContent =
-            `Surface totale : ${surfaceTotale.toFixed(2)} m²`;
+        // Retrieve the selected wastage rate
+        const tauxPertes = Number(document.getElementById("tauxpertes").value);
+
+        // Calculate the required tile quantity, including wastage
+        const quantiteCarreaux = surfaceTotale * (1 + tauxPertes / 100);
+
+        // Display the results
+        document.getElementById("resultatsurface").innerHTML = `
+    <strong>Résultat du métré</strong><br>
+    Surface totale à carreler : ${Math.ceil(surfaceTotale)} m²<br>
+    Taux de pertes : ${tauxPertes} %<br>
+    Quantité de carreaux nécessaire : ${Math.ceil(quantiteCarreaux)} m²
+`;
     });
 
 });
