@@ -2,752 +2,1687 @@
 
 /* =========================================
    KIJ CARRELAGE PRO
-   Moteur principal de l'application
+   Moteur complet de calcul
 ========================================= */
 
-const $ = (id) => document.getElementById(id);
+/* =========================================
+   1. CONFIGURATION ET ÉTAT
+========================================= */
 
-const STORAGE_KEY = "kijCarrelagePro_projects_v1";
+const STORAGE_KEY = "kijCarrelagePro_projects_v2";
+
+const $ = (selector, parent = document) =>
+    parent.querySelector(selector);
+
+const $$ = (selector, parent = document) =>
+    [...parent.querySelectorAll(selector)];
 
 const state = {
     rooms: [],
     floor: null,
-    floorMortar: null,
-    perimeter: null,
     skirting: null,
-    wall: null
+    wall: null,
+    materials: {},
+    quoteLines: [],
+    transport: 0,
+    labor: 0,
+    subtotal: 0,
+    margin: 0,
+    total: 0,
+    lastCalculation: null
 };
 
-const moneyFormat = (value, currency = "USD") =>
-    new Intl.NumberFormat("fr-FR", {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 2
-    }).format(Number(value) || 0);
+const DEFAULTS = {
+    waste: 10,
+    tileLength: 60,
+    tileWidth: 60,
+    tileThickness: 10,
+    jointWidth: 3,
+    tilesPerCarton: 4,
+    dryFactor: 1.33,
+    mortarMargin: 20,
+    cementBagVolume: 0.035,
+    sandDensity: 1.6
+};
 
-const numberFormat = (value, decimals = 2) =>
-    new Intl.NumberFormat("fr-FR", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: decimals
-    }).format(Number(value) || 0);
 
-const safe = (value) =>
-    String(value ?? "").replace(/[&<>"']/g, (character) => ({
+/* =========================================
+   2. OUTILS GÉNÉRAUX
+========================================= */
+
+function getValue(id, fallback = "") {
+    const element = document.getElementById(id);
+
+    if (!element) return fallback;
+
+    return element.value ?? fallback;
+}
+
+function getNumber(id, fallback = 0) {
+    const value = Number(getValue(id));
+
+    return Number.isFinite(value) ? value : fallback;
+}
+
+function isChecked(id) {
+    return Boolean(document.getElementById(id)?.checked);
+}
+
+function setText(id, value) {
+    const element = document.getElementById(id);
+
+    if (element) {
+        element.textContent = value;
+    }
+}
+
+function setHTML(id, value) {
+    const element = document.getElementById(id);
+
+    if (element) {
+        element.innerHTML = value;
+    }
+}
+
+function round(value, decimals = 2) {
+    const factor = 10 ** decimals;
+
+    return Math.round((value + Number.EPSILON) * factor) / factor;
+}
+
+function ceil(value) {
+    return Math.ceil(value - 1e-10);
+}
+
+function safe(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
         '"': "&quot;",
         "'": "&#039;"
     })[character]);
+}
 
-function notify(message) {
-    const notification = $("notification");
+function moneyFormat(value) {
+    const currency = getValue("devise", "USD");
+
+    try {
+        return new Intl.NumberFormat("fr-FR", {
+            style: "currency",
+            currency,
+            maximumFractionDigits: 2
+        }).format(Number(value) || 0);
+    } catch {
+        return `${numberFormat(value)} ${currency}`;
+    }
+}
+
+function numberFormat(value, decimals = 2) {
+    return new Intl.NumberFormat("fr-FR", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: decimals
+    }).format(Number(value) || 0);
+}
+
+function notify(message, type = "success") {
+    const notification = $("#notification");
+
     if (!notification) return;
 
     notification.textContent = message;
-    notification.classList.add("show");
+    notification.className = `notification show ${type}`;
 
-    clearTimeout(notify.timer);
-    notify.timer = setTimeout(() => {
-        notification.classList.remove("show");
-    }, 3000);
+    clearTimeout(notify.timeout);
+
+    notify.timeout = setTimeout(() => {
+        notification.className = "notification";
+    }, 3500);
 }
 
-function getValue(id) {
-    return $(id)?.value?.trim() ?? "";
+function showResult(id, content, type = "success") {
+    const element = document.getElementById(id);
+
+    if (!element) return;
+
+    element.innerHTML = content;
+    element.className = `result-message result-${type}`;
 }
 
-function getNumber(id) {
-    const value = Number(getValue(id));
-    return Number.isFinite(value) ? value : 0;
-}
+function clearResult(id) {
+    const element = document.getElementById(id);
 
-function setText(id, value) {
-    const element = $(id);
-    if (element) element.textContent = value;
+    if (element) {
+        element.innerHTML = "";
+        element.className = "result-message";
+    }
 }
 
 function getProjectInfo() {
     return {
-        nomProjet: getValue("nomProjet") || "Projet sans nom",
-        nomClient: getValue("nomClient"),
-        nomPrestataire: getValue("nomPrestataire"),
-        adresseProjet: getValue("adresseProjet"),
-        devise: getValue("devise") || "USD",
-        epaisseurMortierSol: getNumber("epaisseurMortierSol"),
-        hauteurplinthe: getNumber("hauteurplinthe"),
-        longueurpiece: getNumber("longueurpiece"),
-        largeurpiece: getNumber("largeurpiece"),
-        epaisseurpose: getNumber("epaisseurpose")
+        name: getValue("nomProjet"),
+        client: getValue("nomClient"),
+        provider: getValue("nomPrestataire"),
+        address: getValue("adresseProjet"),
+        date: getValue("dateProjet"),
+        currency: getValue("devise", "USD")
     };
 }
 
+function validPositive(value) {
+    return Number.isFinite(value) && value > 0;
+}
+
+function sum(values) {
+    return values.reduce((total, value) => total + value, 0);
+}
+
+
 /* =========================================
-   1. GESTION DES PIÈCES
+   3. DIMENSIONS DES PIÈCES
 ========================================= */
 
-function roomField(label, key, placeholder, unit = "m") {
+function createRoomFields(index, shape = "rectangle") {
+    const room = document.createElement("article");
+
+    room.className = "room-card";
+    room.dataset.roomIndex = index;
+
+    room.innerHTML = `
+        <h3>Pièce ${index + 1}</h3>
+
+        <div class="field">
+            <label for="nomPiece${index}">Nom de la pièce</label>
+            <input type="text" id="nomPiece${index}"
+                class="room-name" value="Pièce ${index + 1}"
+                placeholder="Ex. Salon">
+        </div>
+
+        <div class="field">
+            <label for="formePiece${index}">Forme géométrique</label>
+            <select id="formePiece${index}" class="room-shape">
+                <option value="rectangle">Rectangle</option>
+                <option value="cercle">Cercle</option>
+                <option value="trapeze">Trapèze</option>
+                <option value="parallelogramme">Parallélogramme</option>
+            </select>
+        </div>
+
+        <div class="room-fields" id="dimensionsPiece${index}"></div>
+
+        <div class="room-actions">
+            <button type="button"
+                class="button button-danger button-small remove-room">
+                Supprimer cette pièce
+            </button>
+        </div>
+    `;
+
+    $(".room-shape", room).value = shape;
+
+    updateRoomDimensions(room, shape);
+
+    return room;
+}
+
+function updateRoomDimensions(room, shape) {
+    const container = $(".room-fields", room);
+
+    if (!container) return;
+
+    const index = room.dataset.roomIndex;
+
+    const fields = {
+        rectangle: `
+            ${roomInput(index, "longueur", "Longueur (m)", 5)}
+            ${roomInput(index, "largeur", "Largeur (m)", 4)}
+        `,
+
+        cercle: `
+            ${roomInput(index, "rayon", "Rayon (m)", 2)}
+        `,
+
+        trapeze: `
+            ${roomInput(index, "grandeBase", "Grande base (m)", 5)}
+            ${roomInput(index, "petiteBase", "Petite base (m)", 3)}
+            ${roomInput(index, "hauteur", "Hauteur (m)", 3)}
+            ${roomInput(index, "coteGauche", "Côté gauche (m)", 3.2)}
+            ${roomInput(index, "coteDroit", "Côté droit (m)", 3.2)}
+        `,
+
+        parallelogramme: `
+            ${roomInput(index, "base", "Base (m)", 5)}
+            ${roomInput(index, "hauteur", "Hauteur (m)", 3)}
+            ${roomInput(index, "cote", "Côté oblique (m)", 3.5)}
+        `
+    };
+
+    container.innerHTML = fields[shape] || fields.rectangle;
+}
+
+function roomInput(index, name, label, defaultValue) {
     return `
         <div class="field">
-            <label>${label} (${unit})</label>
-            <input
-                type="number"
+            <label for="${name}Piece${index}">${label}</label>
+            <input type="number"
+                id="${name}Piece${index}"
+                class="room-dimension"
+                data-dimension="${name}"
                 min="0"
                 step="0.01"
-                data-dim="${key}"
-                placeholder="${placeholder}"
-                required
-            >
+                value="${defaultValue}">
         </div>
     `;
 }
 
-function roomFields(shape) {
-    switch (shape) {
-        case "rectangle":
-            return `
-                ${roomField("Longueur", "longueur", "Ex. 5")}
-                ${roomField("Largeur", "largeur", "Ex. 4")}
-            `;
+function createRooms() {
+    const container = $("#formulairespieces");
 
-        case "cercle":
-            return roomField("Rayon", "rayon", "Ex. 2");
-
-        case "trapeze":
-            return `
-                ${roomField("Grande base", "base1", "Ex. 5")}
-                ${roomField("Petite base", "base2", "Ex. 3")}
-                ${roomField("Hauteur", "hauteur", "Ex. 2.5")}
-                ${roomField("Côté gauche", "cote1", "Ex. 2.7")}
-                ${roomField("Côté droit", "cote2", "Ex. 2.7")}
-            `;
-
-        case "parallelogramme":
-            return `
-                ${roomField("Base", "base", "Ex. 5")}
-                ${roomField("Hauteur", "hauteur", "Ex. 3")}
-                ${roomField("Côté", "cote", "Ex. 4")}
-            `;
-
-        default:
-            return "";
-    }
-}
-
-function roomTemplate(index, room = {}) {
-    const shape = room.shape || "rectangle";
-
-    return `
-        <article class="room-card" data-room="${index}">
-            <h3>Pièce ${index + 1}</h3>
-
-            <div class="field">
-                <label>Nom de la pièce</label>
-                <input
-                    type="text"
-                    data-room-name
-                    value="${safe(room.name || `Pièce ${index + 1}`)}"
-                    placeholder="Ex. Salon"
-                >
-            </div>
-
-            <div class="field">
-                <label>Forme géométrique</label>
-                <select data-shape>
-                    <option value="rectangle" ${shape === "rectangle" ? "selected" : ""}>Rectangle</option>
-                    <option value="cercle" ${shape === "cercle" ? "selected" : ""}>Cercle</option>
-                    <option value="trapeze" ${shape === "trapeze" ? "selected" : ""}>Trapèze</option>
-                    <option value="parallelogramme" ${shape === "parallelogramme" ? "selected" : ""}>Parallélogramme</option>
-                </select>
-            </div>
-
-            <div class="room-fields" data-room-fields>
-                ${roomFields(shape)}
-            </div>
-        </article>
-    `;
-}
-
-function createRooms(savedRooms = null) {
-    const container = $("formulairespieces");
     if (!container) return;
 
     const count = Math.max(
         1,
-        Math.min(100, Number($("nombrepieces")?.value) || 1)
+        Math.min(100, Math.floor(getNumber("nombrepieces", 1)))
     );
 
-    const rooms = savedRooms || Array.from({ length: count }, (_, index) => ({
-        name: `Pièce ${index + 1}`,
-        shape: "rectangle",
-        dimensions: {}
-    }));
+    container.innerHTML = "";
 
-    state.rooms = rooms;
+    for (let index = 0; index < count; index++) {
+        container.appendChild(createRoomFields(index));
+    }
 
-    container.innerHTML = rooms.map((room, index) =>
-        roomTemplate(index, room)
-    ).join("");
-
-    container.querySelectorAll(".room-card").forEach((card, index) => {
-        const room = rooms[index];
-
-        card.querySelectorAll("[data-dim]").forEach((input) => {
-            const key = input.dataset.dim;
-            const value = room.dimensions?.[key];
-
-            if (value !== undefined && value !== null) {
-                input.value = value;
-            }
-        });
-
-        card.querySelector("[data-shape]").addEventListener("change", (event) => {
-            const shape = event.target.value;
-            const fields = card.querySelector("[data-room-fields]");
-            fields.innerHTML = roomFields(shape);
-            clearResults();
-        });
-
-        card.querySelectorAll("input").forEach((input) => {
-            input.addEventListener("input", clearResults);
-        });
-
-        card.querySelector("[data-room-name]").addEventListener("input", clearResults);
-    });
-
-    clearResults();
+    state.rooms = [];
+    clearAllResults();
 }
 
-function collectRooms() {
-    return [...$("formulairespieces").querySelectorAll(".room-card")].map((card) => {
-        const dimensions = {};
+function getRoomInput(room, name) {
+    const input = $(`[data-dimension="${name}"]`, room);
 
-        card.querySelectorAll("[data-dim]").forEach((input) => {
-            dimensions[input.dataset.dim] = Number(input.value);
-        });
-
-        return {
-            name: card.querySelector("[data-room-name]").value.trim(),
-            shape: card.querySelector("[data-shape]").value,
-            dimensions
-        };
-    });
+    return input ? Number(input.value) : 0;
 }
-
-/* =========================================
-   2. CALCULS GÉOMÉTRIQUES
-========================================= */
 
 function calculateRoom(room) {
-    const d = room.dimensions;
+    const shape = $(".room-shape", room)?.value;
+    const name = $(".room-name", room)?.value || "Pièce";
+
     let area = 0;
     let perimeter = 0;
 
-    if (room.shape === "rectangle") {
-        if (d.longueur <= 0 || d.largeur <= 0) return null;
+    if (shape === "rectangle") {
+        const length = getRoomInput(room, "longueur");
+        const width = getRoomInput(room, "largeur");
 
-        area = d.longueur * d.largeur;
-        perimeter = 2 * (d.longueur + d.largeur);
+        if (!validPositive(length) || !validPositive(width)) {
+            return null;
+        }
+
+        area = length * width;
+        perimeter = 2 * (length + width);
     }
 
-    if (room.shape === "cercle") {
-        if (d.rayon <= 0) return null;
+    else if (shape === "cercle") {
+        const radius = getRoomInput(room, "rayon");
 
-        area = Math.PI * d.rayon ** 2;
-        perimeter = 2 * Math.PI * d.rayon;
+        if (!validPositive(radius)) {
+            return null;
+        }
+
+        area = Math.PI * radius ** 2;
+        perimeter = 2 * Math.PI * radius;
     }
 
-    if (room.shape === "trapeze") {
+    else if (shape === "trapeze") {
+        const largeBase = getRoomInput(room, "grandeBase");
+        const smallBase = getRoomInput(room, "petiteBase");
+        const height = getRoomInput(room, "hauteur");
+        const left = getRoomInput(room, "coteGauche");
+        const right = getRoomInput(room, "coteDroit");
+
         if (
-            d.base1 <= 0 || d.base2 <= 0 ||
-            d.hauteur <= 0 || d.cote1 <= 0 || d.cote2 <= 0
-        ) return null;
+            !validPositive(largeBase) ||
+            !validPositive(smallBase) ||
+            !validPositive(height) ||
+            !validPositive(left) ||
+            !validPositive(right)
+        ) {
+            return null;
+        }
 
-        area = ((d.base1 + d.base2) * d.hauteur) / 2;
-        perimeter = d.base1 + d.base2 + d.cote1 + d.cote2;
+        if (smallBase > largeBase) {
+            return null;
+        }
+
+        area = ((largeBase + smallBase) * height) / 2;
+        perimeter = largeBase + smallBase + left + right;
     }
 
-    if (room.shape === "parallelogramme") {
-        if (d.base <= 0 || d.hauteur <= 0 || d.cote <= 0) return null;
+    else if (shape === "parallelogramme") {
+        const base = getRoomInput(room, "base");
+        const height = getRoomInput(room, "hauteur");
+        const side = getRoomInput(room, "cote");
 
-        area = d.base * d.hauteur;
-        perimeter = 2 * (d.base + d.cote);
+        if (
+            !validPositive(base) ||
+            !validPositive(height) ||
+            !validPositive(side)
+        ) {
+            return null;
+        }
+
+        area = base * height;
+        perimeter = 2 * (base + side);
     }
 
-    if (!Number.isFinite(area) || !Number.isFinite(perimeter)) {
+    if (!validPositive(area) || !validPositive(perimeter)) {
         return null;
     }
 
-    return { area, perimeter };
+    return {
+        name,
+        shape,
+        area,
+        perimeter
+    };
 }
 
-function clearResults() {
-    state.floor = null;
-    state.floorMortar = null;
-    state.perimeter = null;
-    state.skirting = null;
-    state.wall = null;
+function calculateAllRooms() {
+    const roomElements = $$(".room-card", $("#formulairespieces"));
 
-    setText("resultatsurface", "Les dimensions ont changé. Relancez le calcul.");
-    setText("resultatMortierSol", "Calculez d'abord les surfaces du sol.");
-    setText("resultatperimetre", "");
-    setText("resultatplinthes", "");
-    setText("resultatfaience", "");
-
-    const step = $("etapehauteur");
-    if (step) step.hidden = true;
-
-    const table = $("tableauResultats");
-    if (table) {
-        table.innerHTML = `
-            <tr>
-                <td colspan="4" class="empty-cell">
-                    Relancez les calculs pour actualiser le tableau.
-                </td>
-            </tr>
-        `;
+    if (!roomElements.length) {
+        notify("Ajoutez au moins une pièce.", "error");
+        return null;
     }
 
-    setText("resultStatus", "Calculs à actualiser");
-    setText("saveStatus", "Modifications non enregistrées");
+    const rooms = [];
+
+    for (const roomElement of roomElements) {
+        const result = calculateRoom(roomElement);
+
+        if (!result) {
+            notify(
+                "Vérifiez les dimensions de chaque pièce. Toutes doivent être positives et cohérentes.",
+                "error"
+            );
+
+            return null;
+        }
+
+        rooms.push(result);
+    }
+
+    state.rooms = rooms;
+
+    return rooms;
 }
 
+
 /* =========================================
-   3. CALCUL DU CARRELAGE SOL
+   4. CONFIGURATION DES CARREAUX
+========================================= */
+
+function getTileConfig(surface) {
+    const common = {
+        length: getNumber("longueurCarreau", DEFAULTS.tileLength),
+        width: getNumber("largeurCarreau", DEFAULTS.tileWidth),
+        thickness: getNumber("epaisseurCarreau", DEFAULTS.tileThickness),
+        joint: getNumber("largeurJoint", DEFAULTS.jointWidth),
+        piecesPerCarton: getNumber("carreauxParCarton", DEFAULTS.tilesPerCarton),
+        cartonArea: getNumber("surfaceCarton", 0)
+    };
+
+    const configurations = {
+        sol: {
+            checkbox: "utiliserDimensionsSol",
+            length: "longueurCarreauSol",
+            width: "largeurCarreauSol",
+            thickness: "epaisseurCarreauSol",
+            joint: "jointSol",
+            pieces: "piecesCartonSol",
+            carton: "surfaceCartonSol"
+        },
+
+        plinthes: {
+            checkbox: "utiliserDimensionsPlinthes",
+            length: "longueurCarreauPlinthes",
+            width: "largeurCarreauPlinthes",
+            thickness: "epaisseurCarreauPlinthes",
+            joint: "jointPlinthes",
+            pieces: "piecesCartonPlinthes",
+            carton: "surfaceCartonPlinthes"
+        },
+
+        murs: {
+            checkbox: "utiliserDimensionsMurs",
+            length: "longueurCarreauMurs",
+            width: "largeurCarreauMurs",
+            thickness: "epaisseurCarreauMurs",
+            joint: "jointMurs",
+            pieces: "piecesCartonMurs",
+            carton: "surfaceCartonMurs"
+        }
+    };
+
+    const config = configurations[surface];
+
+    if (!config || !isChecked(config.checkbox)) {
+        return common;
+    }
+
+    return {
+        length: getNumber(config.length, common.length),
+        width: getNumber(config.width, common.width),
+        thickness: getNumber(config.thickness, common.thickness),
+        joint: getNumber(config.joint, common.joint),
+        piecesPerCarton: getNumber(config.pieces, common.piecesPerCarton),
+        cartonArea: getNumber(config.carton, 0)
+    };
+}
+
+function calculateTiles(area, wasteRate, config) {
+    if (
+        !validPositive(area) ||
+        !validPositive(config.length) ||
+        !validPositive(config.width)
+    ) {
+        return null;
+    }
+
+    const tileArea = (config.length * config.width) / 10000;
+    const areaWithWaste = area * (1 + wasteRate / 100);
+
+    const pieces = ceil(areaWithWaste / tileArea);
+
+    let cartons = 0;
+    let purchasedArea = 0;
+
+    if (validPositive(config.cartonArea)) {
+        cartons = ceil(areaWithWaste / config.cartonArea);
+        purchasedArea = cartons * config.cartonArea;
+    } else if (validPositive(config.piecesPerCarton)) {
+        cartons = ceil(pieces / config.piecesPerCarton);
+        purchasedArea = cartons * config.piecesPerCarton * tileArea;
+    }
+
+    return {
+        area,
+        wasteRate,
+        areaWithWaste,
+        tileArea,
+        pieces,
+        cartons,
+        purchasedArea,
+        length: config.length,
+        width: config.width,
+        thickness: config.thickness
+    };
+}
+
+
+/* =========================================
+   5. CALCUL DU SOL
 ========================================= */
 
 function calculateFloor() {
-    const rooms = collectRooms();
+    const rooms = calculateAllRooms();
 
-    if (!rooms.length) {
-        notify("Ajoutez au moins une pièce.");
-        return;
+    if (!rooms) return null;
+
+    const area = sum(rooms.map(room => room.area));
+    const perimeter = sum(rooms.map(room => room.perimeter));
+
+    const wasteRate = getNumber("tauxpertes", DEFAULTS.waste);
+    const tiles = calculateTiles(
+        area,
+        wasteRate,
+        getTileConfig("sol")
+    );
+
+    if (!tiles) {
+        notify("Vérifiez les dimensions des carreaux du sol.", "error");
+        return null;
     }
 
-    const results = rooms.map((room) => ({
-        name: room.name || "Pièce sans nom",
-        ...calculateRoom(room)
-    }));
-
-    if (results.some((room) => !Number.isFinite(room.area))) {
-        notify("Vérifiez les dimensions de toutes les pièces.");
-        return;
-    }
-
-    const totalArea = results.reduce((sum, room) => sum + room.area, 0);
-    const totalPerimeter = results.reduce((sum, room) => sum + room.perimeter, 0);
-    const lossRate = Number($("tauxpertes").value) || 10;
-    const areaWithLoss = totalArea * (1 + lossRate / 100);
-
-    state.rooms = rooms;
     state.floor = {
-        rooms: results,
-        totalArea,
-        totalPerimeter,
-        lossRate,
-        areaWithLoss
+        area,
+        perimeter,
+        rooms,
+        tiles
     };
 
-    $("resultatsurface").innerHTML = `
-        <strong>Résultat du métré du sol</strong>
-        <ul>
-            <li>Surface nette : <strong>${numberFormat(totalArea)} m²</strong></li>
-            <li>Pertes prévues : <strong>${lossRate} %</strong></li>
-            <li>Quantité de carreaux à prévoir : <strong>${numberFormat(areaWithLoss)} m²</strong></li>
-        </ul>
-    `;
+    showResult("resultatsurface", `
+        <strong>Résultats du métré du sol</strong>
 
-    updateSummary();
-    setText("resultStatus", "Calculs actualisés");
-    notify("Surface du sol calculée.");
+        <div class="result-grid">
+            <div class="result-card">
+                <small>Surface totale</small>
+                <strong>${numberFormat(area)} m²</strong>
+            </div>
+
+            <div class="result-card">
+                <small>Périmètre cumulé</small>
+                <strong>${numberFormat(perimeter)} m</strong>
+            </div>
+
+            <div class="result-card">
+                <small>Surface avec pertes</small>
+                <strong>${numberFormat(tiles.areaWithWaste)} m²</strong>
+            </div>
+
+            <div class="result-card">
+                <small>Nombre de carreaux</small>
+                <strong>${tiles.pieces}</strong>
+            </div>
+
+            <div class="result-card">
+                <small>Nombre de cartons</small>
+                <strong>${tiles.cartons || "À déterminer"}</strong>
+            </div>
+        </div>
+
+        <ul>
+            ${rooms.map(room => `
+                <li>
+                    ${safe(room.name)} :
+                    ${numberFormat(room.area)} m² —
+                    périmètre ${numberFormat(room.perimeter)} m
+                </li>
+            `).join("")}
+        </ul>
+    `);
+
+    updateAllResults();
+
+    return state.floor;
 }
 
-/* =========================================
-   4. CALCUL DU MORTIER SOL
-========================================= */
-
-function calculateFloorMortar() {
-    if (!state.floor) {
-        notify("Calculez d'abord la surface du sol.");
-        return;
-    }
-
-    const thickness = getNumber("epaisseurMortierSol");
-
-    if (thickness <= 0) {
-        notify("Entrez une épaisseur de mortier valide.");
-        return;
-    }
-
-    const wetVolume = state.floor.totalArea * (thickness / 100);
-    const dryVolume = wetVolume * 1.33 * 1.20;
-
-    const cementVolume = dryVolume / 5;
-    const sandVolume = dryVolume * 4 / 5;
-
-    const cementBags = cementVolume / 0.035;
-    const sandTonnes = sandVolume * 1.6;
-
-    state.floorMortar = {
-        wetVolume,
-        dryVolume,
-        cementBags,
-        sandTonnes
-    };
-
-    $("resultatMortierSol").innerHTML = `
-        <strong>Estimation du mortier pour le sol</strong>
-        <ul>
-            <li>Volume de mortier frais : ${numberFormat(wetVolume)} m³</li>
-            <li>Volume sec estimé avec marge : ${numberFormat(dryVolume)} m³</li>
-            <li>Ciment : <strong>${numberFormat(cementBags, 1)} sacs de 50 kg</strong></li>
-            <li>Sable : <strong>${numberFormat(sandTonnes)} tonnes</strong></li>
-        </ul>
-        <p class="disclaimer">Dosage indicatif 1:4 en volume, avec coefficient de conversion et marge de 20 %.</p>
-    `;
-
-    updateSummary();
-    notify("Mortier du sol calculé.");
-}
 
 /* =========================================
-   5. CALCUL DU PÉRIMÈTRE ET DES PLINTHES
+   6. CALCUL DU PÉRIMÈTRE ET DES PLINTHES
 ========================================= */
 
 function calculatePerimeter() {
-    if (!state.floor) {
-        notify("Calculez d'abord les surfaces du sol.");
-        return;
+    const rooms = calculateAllRooms();
+
+    if (!rooms) return null;
+
+    const perimeter = sum(rooms.map(room => room.perimeter));
+    const deductions = getNumber("deductionOuverturesPlinthes", 0);
+
+    if (deductions < 0 || deductions > perimeter) {
+        notify("Vérifiez la largeur des ouvertures à déduire.", "error");
+        return null;
     }
 
-    const total = state.floor.totalPerimeter;
+    const netPerimeter = perimeter - deductions;
 
-    state.perimeter = total;
+    showResult("resultatperimetre", `
+        <strong>Calcul du périmètre</strong>
+        <p>Périmètre total : ${numberFormat(perimeter)} m</p>
+        <p>Ouvertures déduites : ${numberFormat(deductions)} m</p>
+        <p><strong>Périmètre net : ${numberFormat(netPerimeter)} m</strong></p>
+    `);
 
-    $("resultatperimetre").innerHTML = `
-        Périmètre géométrique total des pièces :
-        <strong>${numberFormat(total)} mètres linéaires</strong>.
-    `;
-
-    $("etapehauteur").hidden = false;
-    notify("Périmètre calculé.");
+    return netPerimeter;
 }
 
 function calculateSkirting() {
-    if (state.perimeter === null) {
-        notify("Calculez d'abord le périmètre.");
-        return;
+    const perimeter = calculatePerimeter();
+
+    if (perimeter === null) return null;
+
+    const height = getNumber("hauteurplinthe", 0);
+
+    if (!validPositive(height)) {
+        notify("Entrez une hauteur de plinthe valide.", "error");
+        return null;
     }
 
-    const height = getNumber("hauteurplinthe");
+    const area = perimeter * (height / 100);
+    const waste = getNumber("pertesPlinthes", 10);
 
-    if (height <= 0) {
-        notify("Entrez une hauteur de plinthe valide.");
-        return;
+    const tiles = calculateTiles(
+        area,
+        waste,
+        getTileConfig("plinthes")
+    );
+
+    if (!tiles) {
+        notify("Vérifiez les dimensions des carreaux des plinthes.", "error");
+        return null;
     }
-
-    const netArea = state.perimeter * height;
-    const areaWithLoss = netArea * 1.10;
 
     state.skirting = {
-        perimeter: state.perimeter,
+        perimeter,
         height,
-        netArea,
-        areaWithLoss
+        area,
+        tiles
     };
 
-    $("resultatplinthes").innerHTML = `
-        <strong>Résultat des plinthes</strong>
-        <ul>
-            <li>Longueur : ${numberFormat(state.perimeter)} ml</li>
-            <li>Hauteur : ${numberFormat(height)} m</li>
-            <li>Surface nette : ${numberFormat(netArea)} m²</li>
-            <li>Avec 10 % de pertes : <strong>${numberFormat(areaWithLoss)} m²</strong></li>
-        </ul>
-    `;
+    showResult("resultatplinthes", `
+        <strong>Résultats des plinthes</strong>
 
-    updateSummary();
-    notify("Surface des plinthes calculée.");
+        <div class="result-grid">
+            <div class="result-card">
+                <small>Périmètre net</small>
+                <strong>${numberFormat(perimeter)} m</strong>
+            </div>
+
+            <div class="result-card">
+                <small>Hauteur</small>
+                <strong>${numberFormat(height)} cm</strong>
+            </div>
+
+            <div class="result-card">
+                <small>Surface nette</small>
+                <strong>${numberFormat(area)} m²</strong>
+            </div>
+
+            <div class="result-card">
+                <small>Surface avec pertes</small>
+                <strong>${numberFormat(tiles.areaWithWaste)} m²</strong>
+            </div>
+
+            <div class="result-card">
+                <small>Nombre de carreaux</small>
+                <strong>${tiles.pieces}</strong>
+            </div>
+
+            <div class="result-card">
+                <small>Nombre de cartons</small>
+                <strong>${tiles.cartons || "À déterminer"}</strong>
+            </div>
+        </div>
+    `);
+
+    updateAllResults();
+
+    return state.skirting;
 }
 
+
 /* =========================================
-   6. FAÏENCE ET MORTIER MURAL
+   7. CALCUL DES MURS ET FAÏENCES
 ========================================= */
 
 function calculateWall() {
-    const length = getNumber("longueurpiece");
-    const height = getNumber("largeurpiece");
-    const thickness = getNumber("epaisseurpose");
+    const length = getNumber("longueurpiece", 0);
+    const height = getNumber("largeurpiece", 0);
+    const openings = getNumber("ouverturesMurs", 0);
 
-    if (length <= 0 || height <= 0 || thickness <= 0) {
-        notify("Vérifiez la longueur, la hauteur et l'épaisseur.");
-        return;
+    if (!validPositive(length) || !validPositive(height)) {
+        notify("Entrez la longueur et la hauteur des murs.", "error");
+        return null;
     }
 
-    const netArea = length * height;
-    const areaWithLoss = netArea * 1.10;
+    const grossArea = length * height;
 
-    const wetVolume = netArea * (thickness / 100);
-    const dryVolume = wetVolume * 1.33 * 1.20;
+    if (openings < 0 || openings >= grossArea) {
+        notify("Vérifiez la surface des ouvertures à déduire.", "error");
+        return null;
+    }
 
-    const cementVolume = dryVolume / 5;
-    const sandVolume = dryVolume * 4 / 5;
+    const area = grossArea - openings;
+    const waste = getNumber("pertesMurs", 10);
 
-    const cementBags = cementVolume / 0.035;
-    const sandTonnes = sandVolume * 1.6;
+    const tiles = calculateTiles(
+        area,
+        waste,
+        getTileConfig("murs")
+    );
+
+    if (!tiles) {
+        notify("Vérifiez les dimensions des carreaux muraux.", "error");
+        return null;
+    }
 
     state.wall = {
         length,
         height,
-        thickness,
-        netArea,
-        areaWithLoss,
+        grossArea,
+        openings,
+        area,
+        tiles
+    };
+
+    showResult("resultatfaience", `
+        <strong>Résultats des murs et faïences</strong>
+
+        <div class="result-grid">
+            <div class="result-card">
+                <small>Surface brute</small>
+                <strong>${numberFormat(grossArea)} m²</strong>
+            </div>
+
+            <div class="result-card">
+                <small>Ouvertures déduites</small>
+                <strong>${numberFormat(openings)} m²</strong>
+            </div>
+
+            <div class="result-card">
+                <small>Surface nette</small>
+                <strong>${numberFormat(area)} m²</strong>
+            </div>
+
+            <div class="result-card">
+                <small>Surface avec pertes</small>
+                <strong>${numberFormat(tiles.areaWithWaste)} m²</strong>
+            </div>
+
+            <div class="result-card">
+                <small>Nombre de carreaux</small>
+                <strong>${tiles.pieces}</strong>
+            </div>
+
+            <div class="result-card">
+                <small>Nombre de cartons</small>
+                <strong>${tiles.cartons || "À déterminer"}</strong>
+            </div>
+        </div>
+    `);
+
+    updateAllResults();
+
+    return state.wall;
+}
+
+
+/* =========================================
+   8. CALCUL DES MORTIERS TRADITIONNELS
+========================================= */
+
+function calculateTraditionalMortar(area, thicknessCm, cementRatio, sandRatio, dryFactor, margin, bagVolume, sandDensity) {
+    if (
+        !validPositive(area) ||
+        !validPositive(thicknessCm) ||
+        !validPositive(cementRatio) ||
+        !validPositive(sandRatio) ||
+        !validPositive(dryFactor) ||
+        bagVolume <= 0 ||
+        sandDensity <= 0
+    ) {
+        return null;
+    }
+
+    const wetVolume = area * (thicknessCm / 100);
+
+    const dryVolume = wetVolume *
+        dryFactor *
+        (1 + margin / 100);
+
+    const totalParts = cementRatio + sandRatio;
+
+    const cementVolume = dryVolume * cementRatio / totalParts;
+    const sandVolume = dryVolume * sandRatio / totalParts;
+
+    const cementBags = ceil(cementVolume / bagVolume);
+    const sandTonnes = sandVolume * sandDensity;
+
+    return {
         wetVolume,
         dryVolume,
+        cementVolume,
+        sandVolume,
         cementBags,
         sandTonnes
     };
-
-    $("resultatfaience").innerHTML = `
-        <strong>Résultat du revêtement mural</strong>
-        <ul>
-            <li>Surface nette : ${numberFormat(netArea)} m²</li>
-            <li>Faïence avec 10 % de pertes : <strong>${numberFormat(areaWithLoss)} m²</strong></li>
-            <li>Volume de mortier frais : ${numberFormat(wetVolume)} m³</li>
-            <li>Ciment : <strong>${numberFormat(cementBags, 1)} sacs de 50 kg</strong></li>
-            <li>Sable : <strong>${numberFormat(sandTonnes)} tonnes</strong></li>
-        </ul>
-        <p class="disclaimer">Estimation indicative. Les ouvertures (portes, fenêtres) ne sont pas déduites.</p>
-    `;
-
-    updateSummary();
-    notify("Faïence et mortier mural calculés.");
 }
 
-/* =========================================
-   7. TABLEAU RÉCAPITULATIF
-========================================= */
+function calculateFloorMortar() {
+    if (!state.floor && !calculateFloor()) return null;
 
-function updateSummary() {
-    const rows = [];
+    const area = state.floor.tiles.areaWithWaste;
 
-    if (state.floor) {
-        state.floor.rooms.forEach((room) => {
-            rows.push([
-                "Sol",
-                room.name,
-                numberFormat(room.area),
-                "m²"
-            ]);
-        });
+    const result = calculateTraditionalMortar(
+        area,
+        getNumber("epaisseurMortierSol", 3),
+        getNumber("ratioCimentSol", 1),
+        getNumber("ratioSableSol", 4),
+        getNumber("facteurSecSol", DEFAULTS.dryFactor),
+        getNumber("margeMortierSol", DEFAULTS.mortarMargin),
+        getNumber("volumeSacCimentSol", DEFAULTS.cementBagVolume),
+        getNumber("densiteSableSol", DEFAULTS.sandDensity)
+    );
 
-        rows.push([
-            "Sol",
-            "Carreaux avec pertes",
-            numberFormat(state.floor.areaWithLoss),
-            "m²"
-        ]);
+    if (!result) {
+        notify("Vérifiez les paramètres du mortier du sol.", "error");
+        return null;
     }
 
-    if (state.floorMortar) {
-        rows.push([
-            "Mortier sol",
-            "Ciment",
-            numberFormat(state.floorMortar.cementBags, 1),
-            "sacs de 50 kg"
-        ]);
+    state.floor.mortar = result;
 
-        rows.push([
-            "Mortier sol",
-            "Sable",
-            numberFormat(state.floorMortar.sandTonnes),
-            "tonnes"
-        ]);
-    }
+    showResult("resultatMortierSol", `
+        <strong>Mortier traditionnel du sol</strong>
 
-    if (state.skirting) {
-        rows.push([
-            "Plinthes",
-            "Surface avec pertes",
-            numberFormat(state.skirting.areaWithLoss),
-            "m²"
-        ]);
-    }
+        <div class="result-grid">
+            <div class="result-card">
+                <small>Volume frais</small>
+                <strong>${numberFormat(result.wetVolume)} m³</strong>
+            </div>
 
-    if (state.wall) {
-        rows.push([
-            "Faïence",
-            "Surface avec pertes",
-            numberFormat(state.wall.areaWithLoss),
-            "m²"
-        ]);
+            <div class="result-card">
+                <small>Volume sec estimé</small>
+                <strong>${numberFormat(result.dryVolume)} m³</strong>
+            </div>
 
-        rows.push([
-            "Mortier mural",
-            "Ciment",
-            numberFormat(state.wall.cementBags, 1),
-            "sacs de 50 kg"
-        ]);
+            <div class="result-card">
+                <small>Ciment</small>
+                <strong>${result.cementBags} sacs</strong>
+            </div>
 
-        rows.push([
-            "Mortier mural",
-            "Sable",
-            numberFormat(state.wall.sandTonnes),
-            "tonnes"
-        ]);
-    }
+            <div class="result-card">
+                <small>Sable</small>
+                <strong>${numberFormat(result.sandTonnes)} tonnes</strong>
+            </div>
+        </div>
+    `);
 
-    const tbody = $("tableauResultats");
+    updateAllResults();
 
-    if (!tbody) return;
-
-    if (!rows.length) {
-        tbody.innerHTML = `
-            <tr><td colspan="4" class="empty-cell">Aucun calcul effectué.</td></tr>
-        `;
-        return;
-    }
-
-    tbody.innerHTML = rows.map((row) => `
-        <tr>
-            <td>${safe(row[0])}</td>
-            <td>${safe(row[1])}</td>
-            <td><strong>${safe(row[2])}</strong></td>
-            <td>${safe(row[3])}</td>
-        </tr>
-    `).join("");
+    return result;
 }
 
+
 /* =========================================
-   8. PRÉPARATION DU DEVIS
+   9. CALCUL DES MÉTHODES DE POSE
 ========================================= */
 
-function price(id) {
-    const value = getNumber(id);
-    return value >= 0 ? value : 0;
+function calculateAdhesive(area, consumption, bagWeight) {
+    if (
+        !validPositive(area) ||
+        !validPositive(consumption) ||
+        !validPositive(bagWeight)
+    ) {
+        return null;
+    }
+
+    const totalKg = area * consumption;
+
+    return {
+        totalKg,
+        bags: ceil(totalKg / bagWeight),
+        bagWeight
+    };
+}
+
+function getSurfaceMethod(surface) {
+    const id = {
+        sol: "methodePoseSol",
+        plinthes: "methodePosePlinthes",
+        murs: "methodePoseMurs"
+    }[surface];
+
+    return getValue(id, "traditional");
+}
+
+function calculateSurfaceMaterials(surface, data) {
+    if (!data) return null;
+
+    const area = data.tiles.areaWithWaste;
+    const method = getSurfaceMethod(surface);
+
+    let materialResult;
+
+    if (method === "traditional") {
+        let thickness;
+        let cementRatio;
+        let sandRatio;
+        let dryFactor = DEFAULTS.dryFactor;
+        let margin = DEFAULTS.mortarMargin;
+        let bagVolume = DEFAULTS.cementBagVolume;
+        let density = DEFAULTS.sandDensity;
+
+        if (surface === "sol") {
+            thickness = getNumber("epaisseurMortierSol", 3);
+            cementRatio = getNumber("ratioCimentSol", 1);
+            sandRatio = getNumber("ratioSableSol", 4);
+            dryFactor = getNumber("facteurSecSol", 1.33);
+            margin = getNumber("margeMortierSol", 20);
+            bagVolume = getNumber("volumeSacCimentSol", 0.035);
+            density = getNumber("densiteSableSol", 1.6);
+        } else if (surface === "plinthes") {
+            thickness = getNumber("epaisseurMortierPlinthes", 1.5);
+            cementRatio = getNumber("ratioCimentPlinthes", 1);
+            sandRatio = getNumber("ratioSablePlinthes", 4);
+        } else {
+            thickness = getNumber("epaisseurMortierMurs", 1.5);
+            cementRatio = getNumber("ratioCimentMurs", 1);
+            sandRatio = getNumber("ratioSableMurs", 4);
+        }
+
+        materialResult = calculateTraditionalMortar(
+            area,
+            thickness,
+            cementRatio,
+            sandRatio,
+            dryFactor,
+            margin,
+            bagVolume,
+            density
+        );
+
+        if (!materialResult) return null;
+
+        return {
+            method,
+            mortar: materialResult,
+            adhesive: null
+        };
+    }
+
+    let consumption;
+    let bagWeight;
+
+    if (surface === "sol") {
+        consumption = getNumber("consommationColleSol", 4);
+        bagWeight = getNumber("poidsSacColleSol", 25);
+    } else if (surface === "plinthes") {
+        consumption = getNumber("consommationCollePlinthes", 4);
+        bagWeight = getNumber("poidsSacCollePlinthes", 25);
+    } else {
+        consumption = getNumber("consommationColleMurs", 4);
+        bagWeight = getNumber("poidsSacColleMurs", 25);
+    }
+
+    materialResult = calculateAdhesive(area, consumption, bagWeight);
+
+    if (!materialResult) return null;
+
+    return {
+        method,
+        mortar: null,
+        adhesive: materialResult
+    };
+}
+
+function calculateAllLayingMaterials() {
+    if (!state.floor && !calculateFloor()) return false;
+
+    if (!state.skirting && !calculateSkirting()) return false;
+
+    const surfaces = [
+        ["sol", state.floor],
+        ["plinthes", state.skirting],
+        ["murs", state.wall]
+    ];
+
+    for (const [name, data] of surfaces) {
+        if (!data) continue;
+
+        data.laying = calculateSurfaceMaterials(name, data);
+
+        if (!data.laying) {
+            notify(`Vérifiez les paramètres de pose : ${name}.`, "error");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+/* =========================================
+   10. JOINTS ET ACCESSOIRES
+========================================= */
+
+function calculateGrout(area, config) {
+    if (
+        !validPositive(area) ||
+        !validPositive(config.length) ||
+        !validPositive(config.width)
+    ) {
+        return 0;
+    }
+
+    const lengthMm = config.length * 10;
+    const widthMm = config.width * 10;
+    const tileThickness = config.thickness;
+    const joint = config.joint;
+    const density = getNumber("densiteJoint", 1.6);
+    const waste = getNumber("margeJoint", 10);
+
+    if (!validPositive(density) || joint <= 0) return 0;
+
+    /*
+       Formule indicative :
+       consommation kg/m² =
+       ((L + l) / (L × l)) × largeur joint × épaisseur carreau
+       × densité / 1000
+    */
+
+    const consumption =
+        ((lengthMm + widthMm) / (lengthMm * widthMm)) *
+        joint *
+        tileThickness *
+        density;
+
+    return area * consumption * (1 + waste / 100);
+}
+
+function calculateAccessories() {
+    const surfaces = [
+        ["sol", state.floor],
+        ["plinthes", state.skirting],
+        ["murs", state.wall]
+    ];
+
+    const totalTiles = sum(
+        surfaces
+            .filter(([, data]) => data)
+            .map(([, data]) => data.tiles.pieces)
+    );
+
+    const totalGrout = sum(
+        surfaces
+            .filter(([, data]) => data)
+            .map(([name, data]) =>
+                calculateGrout(data.tiles.areaWithWaste, getTileConfig(name))
+            )
+    );
+
+    const margin = getNumber("margeAccessoires", 5);
+
+    const crosses = isChecked("inclureCroisillons")
+        ? ceil(totalTiles * getNumber("croisillonsParCarreau", 4) *
+            (1 + margin / 100))
+        : 0;
+
+    const clips = isChecked("inclureClips")
+        ? ceil(totalTiles * getNumber("clipsParCarreau", 4) *
+            (1 + margin / 100))
+        : 0;
+
+    const jointBags = isChecked("inclureJointCarrelage")
+        ? ceil(totalGrout / getNumber("poidsSacJoint", 5))
+        : 0;
+
+    const result = {
+        totalTiles,
+        groutKg: isChecked("inclureJointCarrelage") ? totalGrout : 0,
+        jointBags,
+        crosses,
+        clips,
+        whiteCement: isChecked("inclureCimentBlanc"),
+        wedges: isChecked("inclureCales")
+    };
+
+    state.materials.accessories = result;
+
+    return result;
+}
+
+
+/* =========================================
+   11. MATÉRIAUX TOTAUX
+========================================= */
+
+function calculateAllMaterials() {
+    if (!calculateAllLayingMaterials()) return null;
+
+    const surfaces = [
+        state.floor,
+        state.skirting,
+        state.wall
+    ].filter(Boolean);
+
+    const cementBags = sum(
+        surfaces.map(data => data.laying?.mortar?.cementBags || 0)
+    );
+
+    const sandTonnes = sum(
+        surfaces.map(data => data.laying?.mortar?.sandTonnes || 0)
+    );
+
+    const adhesiveKg = sum(
+        surfaces.map(data => data.laying?.adhesive?.totalKg || 0)
+    );
+
+    const adhesiveBags = sum(
+        surfaces.map(data => data.laying?.adhesive?.bags || 0)
+    );
+
+    const accessories = calculateAccessories();
+
+    state.materials = {
+        ...state.materials,
+        cementBags,
+        sandTonnes,
+        adhesiveKg,
+        adhesiveBags,
+        accessories
+    };
+
+    return state.materials;
+}
+
+
+/* =========================================
+   12. TRANSPORT ET LOGISTIQUE
+========================================= */
+
+function calculateTransport() {
+    const mode = getValue("modeTransport", "trip");
+
+    let trips = Math.max(1, Math.floor(getNumber("nombreVoyages", 1)));
+
+    const capacity = getNumber("capaciteVehicule", 0);
+    const estimatedWeight = getNumber("poidsEstimeMateriaux", 0);
+
+    if (validPositive(capacity) && validPositive(estimatedWeight)) {
+        trips = Math.max(trips, ceil(estimatedWeight / capacity));
+    }
+
+    let transportCost = 0;
+
+    if (mode === "trip") {
+        transportCost = trips * getNumber("tarifVoyage", 0);
+    }
+
+    else if (mode === "distance") {
+        const roundTripDistance = getNumber("distanceTransport", 0) * 2;
+
+        transportCost =
+            roundTripDistance *
+            trips *
+            getNumber("tarifKilometre", 0);
+    }
+
+    else if (mode === "fixed") {
+        transportCost = getNumber("forfaitTransport", 0);
+    }
+
+    const handling = getNumber("chargementTransport", 0);
+    const other = getNumber("autresFraisTransport", 0);
+
+    const total = transportCost + handling + other;
+
+    state.transport = {
+        mode,
+        trips,
+        transportCost,
+        handling,
+        other,
+        total
+    };
+
+    return state.transport;
+}
+
+
+/* =========================================
+   13. PRIX ET LIGNES DE DEVIS
+========================================= */
+
+function addQuoteLine(lines, designation, quantity, unit, unitPrice, options = {}) {
+    const qty = Number(quantity) || 0;
+    const price = Number(unitPrice) || 0;
+
+    if (qty <= 0) return;
+
+    lines.push({
+        designation,
+        quantity: qty,
+        unit,
+        unitPrice: price,
+        subtotal: qty * price,
+        category: options.category || "Matériaux",
+        note: options.note || ""
+    });
+}
+
+function getPrice(id) {
+    return Math.max(0, getNumber(id, 0));
 }
 
 function createQuoteLines() {
     const lines = [];
 
-    if (state.floor) {
-        lines.push({
-            description: "Carrelage du sol avec pertes",
-            quantity: state.floor.areaWithLoss,
-            unit: "m²",
-            price: price("prixCarreaux")
-        });
+    if (!state.floor && !calculateFloor()) return [];
+
+    if (!state.skirting && !calculateSkirting()) return [];
+
+    if (!state.materials.cementBags && !calculateAllMaterials()) {
+        // Le calcul global est aussi exécuté lorsque le ciment n'est pas nécessaire.
     }
 
-    if (state.skirting) {
-        lines.push({
-            description: "Plinthes avec pertes",
-            quantity: state.skirting.areaWithLoss,
-            unit: "m²",
-            price: price("prixPlinthes")
-        });
+    const floorArea = state.floor?.tiles.areaWithWaste || 0;
+    const skirtingArea = state.skirting?.tiles.areaWithWaste || 0;
+    const wallArea = state.wall?.tiles.areaWithWaste || 0;
+
+    addQuoteLine(
+        lines,
+        "Carrelage de sol avec pertes",
+        floorArea,
+        "m²",
+        getPrice("prixCarreaux"),
+        { category: "Revêtements" }
+    );
+
+    addQuoteLine(
+        lines,
+        "Carreaux des plinthes avec pertes",
+        skirtingArea,
+        "m²",
+        getPrice("prixPlinthes"),
+        { category: "Revêtements" }
+    );
+
+    addQuoteLine(
+        lines,
+        "Faïence / revêtement mural avec pertes",
+        wallArea,
+        "m²",
+        getPrice("prixFaience"),
+        { category: "Revêtements" }
+    );
+
+    const materials = state.materials;
+
+    addQuoteLine(
+        lines,
+        "Ciment pour mortier traditionnel",
+        materials.cementBags,
+        "sac",
+        getPrice("prixCiment")
+    );
+
+    addQuoteLine(
+        lines,
+        "Sable pour mortier traditionnel",
+        materials.sandTonnes,
+        "tonne",
+        getPrice("prixSable")
+    );
+
+    addQuoteLine(
+        lines,
+        "Ciment-colle",
+        materials.adhesiveBags,
+        "sac",
+        getPrice("prixCimentColle")
+    );
+
+    if (materials.accessories?.whiteCement) {
+        addQuoteLine(
+            lines,
+            "Ciment blanc",
+            1,
+            "lot",
+            getPrice("prixCimentBlanc")
+        );
     }
 
-    if (state.wall) {
-        lines.push({
-            description: "Faïence murale avec pertes",
-            quantity: state.wall.areaWithLoss,
-            unit: "m²",
-            price: price("prixFaience")
-        });
+    if (materials.accessories?.jointBags) {
+        addQuoteLine(
+            lines,
+            "Produit de joint pour carrelage",
+            materials.accessories.jointBags,
+            "sac",
+            getPrice("prixJoint")
+        );
     }
 
-    if (state.floorMortar) {
-        lines.push({
-            description: "Ciment pour mortier de sol",
-            quantity: state.floorMortar.cementBags,
-            unit: "sacs",
-            price: price("prixCiment")
-        });
+    if (materials.accessories?.crosses) {
+        const packets = ceil(
+            materials.accessories.crosses /
+            Math.max(1, getNumber("croisillonsParPaquet", 100))
+        );
 
-        lines.push({
-            description: "Sable pour mortier de sol",
-            quantity: state.floorMortar.sandTonnes,
-            unit: "tonnes",
-            price: price("prixSable")
-        });
+        addQuoteLine(
+            lines,
+            "Croisillons",
+            packets,
+            "paquet",
+            getPrice("prixCroisillons")
+        );
     }
 
-    if (state.wall) {
-        lines.push({
-            description: "Ciment pour mortier mural",
-            quantity: state.wall.cementBags,
-            unit: "sacs",
-            price: price("prixCiment")
-        });
+    if (materials.accessories?.clips) {
+        const packets = ceil(
+            materials.accessories.clips /
+            Math.max(1, getNumber("clipsParPaquet", 100))
+        );
 
-        lines.push({
-            description: "Sable pour mortier mural",
-            quantity: state.wall.sandTonnes,
-            unit: "tonnes",
-            price: price("prixSable")
-        });
+        addQuoteLine(
+            lines,
+            "Clips de nivellement",
+            packets,
+            "paquet",
+            getPrice("prixClips")
+        );
     }
 
-    const laborArea =
-        (state.floor?.totalArea || 0) +
-        (state.skirting?.netArea || 0) +
-        (state.wall?.netArea || 0);
-
-    if (laborArea > 0) {
-        lines.push({
-            description: "Main-d'œuvre",
-            quantity: laborArea,
-            unit: "m²",
-            price: price("prixMainOeuvre")
-        });
+    if (materials.accessories?.wedges) {
+        addQuoteLine(
+            lines,
+            "Cales et coins de nivellement",
+            1,
+            "lot",
+            getPrice("prixCales")
+        );
     }
+
+    state.quoteLines = lines;
 
     return lines;
 }
 
-function generateQuote() {
-    const lines = createQuoteLines();
 
-    if (!lines.length) {
-        notify("Effectuez au moins un calcul avant de préparer le devis.");
+/* =========================================
+   14. MAIN-D'ŒUVRE ET COÛTS
+========================================= */
+
+function calculateLabor() {
+    const totalArea =
+        (state.floor?.area || 0) +
+        (state.skirting?.area || 0) +
+        (state.wall?.area || 0);
+
+    const rate = getPrice("prixMainOeuvre");
+
+    state.labor = {
+        area: totalArea,
+        rate,
+        total: totalArea * rate
+    };
+
+    return state.labor;
+}
+
+function calculateFinancialSummary() {
+    if (!state.materials.cementBags && !calculateAllMaterials()) {
+        // On continue seulement si les surfaces ne nécessitent pas de mortier.
+    }
+
+    const lines = createQuoteLines();
+    const transport = calculateTransport();
+    const labor = calculateLabor();
+
+    const materialTotal = sum(lines.map(line => line.subtotal));
+
+    const otherCosts = getPrice("autresCouts");
+
+    const subtotal =
+        materialTotal +
+        transport.total +
+        labor.total +
+        otherCosts;
+
+    const marginRate = getNumber("margeBeneficiaire", 0);
+    const margin = subtotal * marginRate / 100;
+
+    const total = subtotal + margin;
+
+    state.subtotal = subtotal;
+    state.margin = margin;
+    state.total = total;
+
+    state.financial = {
+        materialTotal,
+        transport: transport.total,
+        labor: labor.total,
+        otherCosts,
+        subtotal,
+        marginRate,
+        margin,
+        total
+    };
+
+    return state.financial;
+}
+
+
+/* =========================================
+   15. TABLEAU RÉCAPITULATIF
+========================================= */
+
+function addSummaryRow(tbody, designation, quantity, unit, observation) {
+    const row = document.createElement("tr");
+
+    const values = [
+        designation,
+        numberFormat(quantity),
+        unit,
+        observation
+    ];
+
+    values.forEach(value => {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        row.appendChild(cell);
+    });
+
+    tbody.appendChild(row);
+}
+
+function updateSummary() {
+    const tbody = $("#tableauResultats");
+
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    if (!state.floor && !state.skirting && !state.wall) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="empty-cell">
+                    Aucun calcul effectué pour le moment.
+                </td>
+            </tr>
+        `;
+
         return;
     }
 
-    const info = getProjectInfo();
-    const currency = info.devise;
+    if (state.floor) {
+        addSummaryRow(
+            tbody,
+            "Surface du sol",
+            state.floor.area,
+            "m²",
+            "Surface nette"
+        );
 
-    const total = lines.reduce(
-        (sum, line) => sum + line.quantity * line.price,
-        0
+        addSummaryRow(
+            tbody,
+            "Carrelage du sol avec pertes",
+            state.floor.tiles.areaWithWaste,
+            "m²",
+            `${state.floor.tiles.pieces} carreaux`
+        );
+
+        addSummaryRow(
+            tbody,
+            "Cartons de carrelage du sol",
+            state.floor.tiles.cartons,
+            "carton",
+            "Arrondi à l'unité supérieure"
+        );
+    }
+
+    if (state.skirting) {
+        addSummaryRow(
+            tbody,
+            "Surface des plinthes",
+            state.skirting.area,
+            "m²",
+            "Surface nette"
+        );
+
+        addSummaryRow(
+            tbody,
+            "Plinthes avec pertes",
+            state.skirting.tiles.areaWithWaste,
+            "m²",
+            `${state.skirting.tiles.pieces} carreaux`
+        );
+
+        addSummaryRow(
+            tbody,
+            "Cartons des plinthes",
+            state.skirting.tiles.cartons,
+            "carton",
+            "Arrondi à l'unité supérieure"
+        );
+    }
+
+    if (state.wall) {
+        addSummaryRow(
+            tbody,
+            "Surface des murs",
+            state.wall.area,
+            "m²",
+            "Après déduction des ouvertures"
+        );
+
+        addSummaryRow(
+            tbody,
+            "Faïence avec pertes",
+            state.wall.tiles.areaWithWaste,
+            "m²",
+            `${state.wall.tiles.pieces} carreaux`
+        );
+
+        addSummaryRow(
+            tbody,
+            "Cartons de faïence",
+            state.wall.tiles.cartons,
+            "carton",
+            "Arrondi à l'unité supérieure"
+        );
+    }
+
+    if (state.materials.cementBags > 0) {
+        addSummaryRow(
+            tbody,
+            "Ciment pour mortier",
+            state.materials.cementBags,
+            "sac",
+            "Sacs de 50 kg selon hypothèse de volume"
+        );
+    }
+
+    if (state.materials.sandTonnes > 0) {
+        addSummaryRow(
+            tbody,
+            "Sable",
+            state.materials.sandTonnes,
+            "tonne",
+            "Masse estimée"
+        );
+    }
+
+    if (state.materials.adhesiveBags > 0) {
+        addSummaryRow(
+            tbody,
+            "Ciment-colle",
+            state.materials.adhesiveBags,
+            "sac",
+            `${numberFormat(state.materials.adhesiveKg)} kg estimés`
+        );
+    }
+
+    const accessories = state.materials.accessories;
+
+    if (accessories) {
+        if (accessories.jointBags > 0) {
+            addSummaryRow(
+                tbody,
+                "Produit de joint",
+                accessories.jointBags,
+                "sac",
+                `${numberFormat(accessories.groutKg)} kg estimés`
+            );
+        }
+
+        if (accessories.crosses > 0) {
+            addSummaryRow(
+                tbody,
+                "Croisillons",
+                accessories.crosses,
+                "pièce",
+                "Quantité indicative"
+            );
+        }
+
+        if (accessories.clips > 0) {
+            addSummaryRow(
+                tbody,
+                "Clips de nivellement",
+                accessories.clips,
+                "pièce",
+                "Quantité indicative"
+            );
+        }
+    }
+
+    setText(
+        "resultStatus",
+        "Les quantités calculées sont disponibles ci-dessous."
     );
+}
 
-    const date = new Date().toLocaleDateString("fr-FR");
+function updateAllResults() {
+    calculateAllMaterials();
+    updateSummary();
 
-    const quoteRows = lines.map((line) => `
+    if (state.floor || state.skirting || state.wall) {
+        calculateFinancialSummary();
+    }
+}
+
+
+/* =========================================
+   16. GÉNÉRATION DU DEVIS
+========================================= */
+
+function generateQuote() {
+    if (!state.floor && !calculateFloor()) return;
+
+    if (!state.skirting && !calculateSkirting()) return;
+
+    if (!calculateAllMaterials()) return;
+
+    const financial = calculateFinancialSummary();
+
+    const project = getProjectInfo();
+
+    const date = project.date ||
+        new Date().toISOString().slice(0, 10);
+
+    const lines = state.quoteLines;
+
+    const rows = lines.map(line => `
         <tr>
-            <td>${safe(line.description)}</td>
-            <td>${numberFormat(line.quantity, 2)}</td>
+            <td>${safe(line.designation)}</td>
+            <td>${numberFormat(line.quantity)}</td>
             <td>${safe(line.unit)}</td>
-            <td>${moneyFormat(line.price, currency)}</td>
-            <td>${moneyFormat(line.quantity * line.price, currency)}</td>
+            <td>${moneyFormat(line.unitPrice)}</td>
+            <td>${moneyFormat(line.subtotal)}</td>
         </tr>
     `).join("");
 
-    $("zoneDevis").innerHTML = `
+    const transport = state.transport;
+    const labor = state.labor;
+
+    const quote = `
         <div class="quote-header">
-            <h2>KIJ CARRELAGE PRO</h2>
-            <p>MÉTRÉ ET ESTIMATION DES TRAVAUX DE CARRELAGE</p>
-            <hr>
+            <h1>KIJ CARRELAGE PRO</h1>
+            <h2>DEVIS ESTIMATIF DE TRAVAUX DE CARRELAGE</h2>
+            <p>Document établi sur la base des métrés et paramètres renseignés.</p>
         </div>
 
-        <h3>DEVIS ESTIMATIF</h3>
+        <hr>
 
-        <p><strong>Projet :</strong> ${safe(info.nomProjet)}</p>
-        <p><strong>Client :</strong> ${safe(info.nomClient || "Non renseigné")}</p>
-        <p><strong>Prestataire :</strong> ${safe(info.nomPrestataire || "Non renseigné")}</p>
-        <p><strong>Chantier :</strong> ${safe(info.adresseProjet || "Non renseigné")}</p>
-        <p><strong>Date :</strong> ${date}</p>
+        <div class="quote-meta">
+            <p><strong>Projet :</strong> ${safe(project.name || "Non renseigné")}</p>
+            <p><strong>Date :</strong> ${safe(date)}</p>
+        </div>
+
+        <p><strong>Client :</strong> ${safe(project.client || "Non renseigné")}</p>
+        <p><strong>Prestataire :</strong> ${safe(project.provider || "Non renseigné")}</p>
+        <p><strong>Adresse du chantier :</strong> ${safe(project.address || "Non renseignée")}</p>
+
+        <h3>1. Détail estimatif des fournitures</h3>
 
         <table>
             <thead>
@@ -756,252 +1691,419 @@ function generateQuote() {
                     <th>Quantité</th>
                     <th>Unité</th>
                     <th>Prix unitaire</th>
-                    <th>Total</th>
+                    <th>Montant</th>
                 </tr>
             </thead>
-            <tbody>${quoteRows}</tbody>
+
+            <tbody>
+                ${rows || `
+                    <tr>
+                        <td colspan="5">Aucune ligne de fourniture.</td>
+                    </tr>
+                `}
+            </tbody>
+        </table>
+
+        <h3>2. Main-d'œuvre</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Désignation</th>
+                    <th>Quantité</th>
+                    <th>Unité</th>
+                    <th>Prix unitaire</th>
+                    <th>Montant</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr>
+                    <td>Travaux de pose</td>
+                    <td>${numberFormat(labor.area)}</td>
+                    <td>m²</td>
+                    <td>${moneyFormat(labor.rate)}</td>
+                    <td>${moneyFormat(labor.total)}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3. Transport et logistique</h3>
+
+        <table>
+            <tbody>
+                <tr>
+                    <td>Transport</td>
+                    <td>${moneyFormat(transport.transportCost)}</td>
+                </tr>
+                <tr>
+                    <td>Chargement et manutention</td>
+                    <td>${moneyFormat(transport.handling)}</td>
+                </tr>
+                <tr>
+                    <td>Autres frais logistiques</td>
+                    <td>${moneyFormat(transport.other)}</td>
+                </tr>
+                <tr>
+                    <th>Total transport et logistique</th>
+                    <th>${moneyFormat(transport.total)}</th>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>4. Récapitulatif financier</h3>
+
+        <table>
+            <tbody>
+                <tr>
+                    <td>Total fournitures</td>
+                    <td>${moneyFormat(financial.materialTotal)}</td>
+                </tr>
+                <tr>
+                    <td>Main-d'œuvre</td>
+                    <td>${moneyFormat(financial.labor)}</td>
+                </tr>
+                <tr>
+                    <td>Transport et logistique</td>
+                    <td>${moneyFormat(financial.transport)}</td>
+                </tr>
+                <tr>
+                    <td>Autres coûts</td>
+                    <td>${moneyFormat(financial.otherCosts)}</td>
+                </tr>
+                <tr>
+                    <th>Sous-total</th>
+                    <th>${moneyFormat(financial.subtotal)}</th>
+                </tr>
+                <tr>
+                    <td>Marge bénéficiaire (${numberFormat(financial.marginRate)} %)</td>
+                    <td>${moneyFormat(financial.margin)}</td>
+                </tr>
+            </tbody>
         </table>
 
         <p class="quote-total">
-            TOTAL ESTIMATIF : ${moneyFormat(total, currency)}
+            TOTAL GÉNÉRAL : ${moneyFormat(financial.total)}
+        </p>
+
+        <h3>5. Conditions et délais</h3>
+
+        <p>
+            <strong>Délai estimatif :</strong>
+            ${safe(getValue("delaiExecution", "À convenir"))}
+        </p>
+
+        <p>
+            <strong>Validité du devis :</strong>
+            ${safe(getValue("validiteDevis", "À convenir"))}
         </p>
 
         <p class="disclaimer">
-            Ce document est un devis estimatif établi sur la base des quantités
-            calculées et des prix saisis. Il doit être vérifié et validé avant
-            engagement contractuel.
+            Ce document constitue une estimation basée sur les informations
+            communiquées. Les quantités, prix et conditions doivent être
+            confirmés avant exécution et commande.
         </p>
 
         <div class="quote-signatures">
             <div>
-                <strong>Le prestataire</strong>
-                <p>Nom et signature :</p>
-            </div>
-            <div>
                 <strong>Le client</strong>
-                <p>Nom et signature :</p>
+            </div>
+
+            <div>
+                <strong>Le prestataire</strong>
             </div>
         </div>
     `;
 
-    notify("Devis préparé.");
+    setHTML("zoneDevis", quote);
+
+    notify("Le devis a été généré.", "success");
+
+    $("#sectionDevis")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
 }
 
+
 /* =========================================
-   9. IMPRESSION / EXPORT PDF
+   17. IMPRESSION / PDF
 ========================================= */
 
 function printQuote() {
-    const quote = $("zoneDevis");
+    if (!$("#zoneDevis")?.innerHTML.trim() ||
+        $("#zoneDevis").textContent.includes("sera affiché ici")) {
+        generateQuote();
+    }
 
-    if (!quote || !quote.querySelector("table")) {
-        notify("Préparez d'abord le devis.");
+    if (!$("#zoneDevis")?.innerHTML.trim()) {
+        notify("Générez d'abord un devis.", "error");
         return;
     }
 
     window.print();
 }
 
+
 /* =========================================
-   10. SAUVEGARDE LOCALE
+   18. SAUVEGARDE ET RESTAURATION
 ========================================= */
 
-function readProjects() {
+function getAllFormData() {
+    const data = {};
+
+    $$("input, select, textarea").forEach(element => {
+        if (!element.id || element.id === "importerDonnees") return;
+
+        if (element.type === "checkbox") {
+            data[element.id] = element.checked;
+        } else if (element.type !== "file") {
+            data[element.id] = element.value;
+        }
+    });
+
+    data.rooms = $$(".room-card", $("#formulairespieces")).map(room => {
+        const dimensions = {};
+
+        $$(".room-dimension", room).forEach(input => {
+            dimensions[input.dataset.dimension] = input.value;
+        });
+
+        return {
+            name: $(".room-name", room)?.value || "",
+            shape: $(".room-shape", room)?.value || "rectangle",
+            dimensions
+        };
+    });
+
+    return data;
+}
+
+function applyFormData(data) {
+    if (!data || typeof data !== "object") return;
+
+    Object.entries(data).forEach(([id, value]) => {
+        if (id === "rooms" || id === "calculations") return;
+
+        const element = document.getElementById(id);
+
+        if (!element || element.type === "file") return;
+
+        if (element.type === "checkbox") {
+            element.checked = Boolean(value);
+        } else {
+            element.value = value;
+        }
+    });
+
+    if (Array.isArray(data.rooms)) {
+        const container = $("#formulairespieces");
+
+        container.innerHTML = "";
+
+        data.rooms.forEach((savedRoom, index) => {
+            const room = createRoomFields(index, savedRoom.shape);
+
+            $(".room-name", room).value = savedRoom.name || `Pièce ${index + 1}`;
+
+            Object.entries(savedRoom.dimensions || {}).forEach(([name, value]) => {
+                const input = $(`[data-dimension="${name}"]`, room);
+
+                if (input) input.value = value;
+            });
+
+            container.appendChild(room);
+        });
+
+        if ($("#nombrepieces")) {
+            $("#nombrepieces").value = data.rooms.length;
+        }
+    }
+
+    updateMethodPanels();
+    updateDimensionPanels();
+}
+
+function getSavedProjects() {
     try {
-        const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-        return Array.isArray(data) ? data : [];
-    } catch (error) {
-        console.error("Erreur de lecture des projets :", error);
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        return saved ? JSON.parse(saved) : [];
+    } catch {
         return [];
     }
 }
 
-function writeProjects(projects) {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
-        return true;
-    } catch (error) {
-        console.error("Erreur de sauvegarde :", error);
-        notify("Impossible de sauvegarder. Espace de stockage insuffisant ?");
-        return false;
-    }
-}
-
-function createProjectId() {
-    if (crypto?.randomUUID) {
-        return crypto.randomUUID();
-    }
-
-    return `kij-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function collectProject() {
-    const inputs = {};
-
-    document.querySelectorAll(
-        "#nomProjet, #nomClient, #nomPrestataire, #adresseProjet, #devise, " +
-        "#tauxpertes, #epaisseurMortierSol, #hauteurplinthe, " +
-        "#longueurpiece, #largeurpiece, #epaisseurpose, " +
-        "#prixCarreaux, #prixPlinthes, #prixFaience, #prixCiment, " +
-        "#prixSable, #prixMainOeuvre"
-    ).forEach((input) => {
-        inputs[input.id] = input.value;
-    });
-
-    return {
-        id: createProjectId(),
-        date: new Date().toISOString(),
-        project: inputs,
-        rooms: collectRooms()
-    };
-}
-
 function saveProject() {
-    const project = collectProject();
-    const projects = readProjects();
+    const project = getProjectInfo();
 
-    const existingIndex = projects.findIndex((item) =>
-        item.project?.nomProjet === project.project.nomProjet &&
-        item.project?.nomClient === project.project.nomClient
-    );
-
-    if (existingIndex >= 0) {
-        project.id = projects[existingIndex].id;
-        projects[existingIndex] = project;
-    } else {
-        projects.unshift(project);
-    }
-
-    if (!writeProjects(projects)) return;
-
-    renderProjects();
-    setText("saveStatus", "Projet enregistré");
-    notify("Projet enregistré sur cet appareil.");
-}
-
-function renderProjects() {
-    const tbody = $("listeProjets");
-    if (!tbody) return;
-
-    const projects = readProjects();
-
-    if (!projects.length) {
-        tbody.innerHTML = `
-            <tr><td colspan="4" class="empty-cell">Aucun projet enregistré.</td></tr>
-        `;
+    if (!project.name.trim()) {
+        notify("Donnez un nom au projet avant de l'enregistrer.", "error");
         return;
     }
 
-    tbody.innerHTML = projects.map((project) => `
-        <tr>
-            <td>${safe(project.project?.nomProjet || "Projet sans nom")}</td>
-            <td>${safe(project.project?.nomClient || "—")}</td>
-            <td>${new Date(project.date).toLocaleString("fr-FR")}</td>
-            <td>
-                <button class="button button-small button-secondary"
-                    data-load="${safe(project.id)}" type="button">
-                    Ouvrir
-                </button>
-                <button class="button button-small button-danger"
-                    data-delete="${safe(project.id)}" type="button">
-                    Supprimer
-                </button>
-            </td>
-        </tr>
-    `).join("");
+    const projects = getSavedProjects();
 
-    tbody.querySelectorAll("[data-load]").forEach((button) => {
-        button.addEventListener("click", () => loadProject(button.dataset.load));
-    });
+    const projectId = globalThis.crypto?.randomUUID?.() ||
+        `project-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-    tbody.querySelectorAll("[data-delete]").forEach((button) => {
-        button.addEventListener("click", () => deleteProject(button.dataset.delete));
-    });
+    const existingIndex = projects.findIndex(
+        item => item.name === project.name &&
+            item.client === project.client
+    );
+
+    const savedProject = {
+        id: existingIndex >= 0 ? projects[existingIndex].id : projectId,
+        name: project.name,
+        client: project.client,
+        date: project.date || new Date().toISOString().slice(0, 10),
+        data: getAllFormData(),
+        savedAt: new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) {
+        projects[existingIndex] = savedProject;
+    } else {
+        projects.push(savedProject);
+    }
+
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+
+        renderSavedProjects();
+
+        notify("Projet enregistré avec succès.");
+    } catch {
+        notify(
+            "Impossible d'enregistrer. Le stockage du navigateur est peut-être plein.",
+            "error"
+        );
+    }
 }
 
 function loadProject(id) {
-    const project = readProjects().find((item) => item.id === id);
+    const project = getSavedProjects().find(item => item.id === id);
 
     if (!project) {
-        notify("Projet introuvable.");
+        notify("Projet introuvable.", "error");
         return;
     }
 
-    Object.entries(project.project || {}).forEach(([key, value]) => {
-        const input = $(key);
-        if (input) input.value = value;
+    applyFormData(project.data);
+
+    clearAllResults();
+
+    state.floor = null;
+    state.skirting = null;
+    state.wall = null;
+    state.materials = {};
+
+    notify(`Projet chargé : ${project.name}`);
+
+    $("#informationsProjet")?.scrollIntoView({
+        behavior: "smooth"
     });
-
-    $("nombrepieces").value = Math.max(1, project.rooms?.length || 1);
-
-    createRooms(project.rooms || []);
-
-    calculateFloor();
-
-    if (state.floor && getNumber("epaisseurMortierSol") > 0) {
-        calculateFloorMortar();
-    }
-
-    if (state.floor && getNumber("hauteurplinthe") > 0) {
-        calculatePerimeter();
-        calculateSkirting();
-    }
-
-    if (
-        getNumber("longueurpiece") > 0 &&
-        getNumber("largeurpiece") > 0
-    ) {
-        calculateWall();
-    }
-
-    setText("saveStatus", "Projet chargé");
-    notify("Projet chargé.");
 }
 
 function deleteProject(id) {
-    if (!confirm("Voulez-vous vraiment supprimer ce projet ?")) return;
+    const projects = getSavedProjects();
 
-    const projects = readProjects().filter((project) => project.id !== id);
+    const updated = projects.filter(item => item.id !== id);
 
-    if (!writeProjects(projects)) return;
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
-    renderProjects();
-    notify("Projet supprimé.");
+        renderSavedProjects();
+
+        notify("Projet supprimé.");
+    } catch {
+        notify("Impossible de supprimer ce projet.", "error");
+    }
 }
 
-/* =========================================
-   11. EXPORT ET IMPORT JSON
-========================================= */
+function renderSavedProjects() {
+    const tbody = $("#listeProjets");
 
-function exportProjects() {
-    const projects = readProjects();
+    if (!tbody) return;
+
+    const projects = getSavedProjects();
+
+    tbody.innerHTML = "";
 
     if (!projects.length) {
-        notify("Aucun projet à exporter.");
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="empty-cell">
+                    Aucun projet enregistré.
+                </td>
+            </tr>
+        `;
+
         return;
     }
 
-    const blob = new Blob(
-        [JSON.stringify(projects, null, 2)],
-        { type: "application/json" }
-    );
+    projects.forEach(project => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>${safe(project.name)}</td>
+            <td>${safe(project.client || "Non renseigné")}</td>
+            <td>${safe(project.date || "")}</td>
+            <td>
+                <button type="button"
+                    class="button button-primary button-small load-project"
+                    data-id="${safe(project.id)}">
+                    Charger
+                </button>
+
+                <button type="button"
+                    class="button button-danger button-small delete-project"
+                    data-id="${safe(project.id)}">
+                    Supprimer
+                </button>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+
+
+/* =========================================
+   19. EXPORTATION ET IMPORTATION JSON
+========================================= */
+
+function exportProjects() {
+    const projects = getSavedProjects();
+
+    if (!projects.length) {
+        notify("Aucun projet à exporter.", "error");
+        return;
+    }
+
+    const content = JSON.stringify(projects, null, 2);
+
+    const blob = new Blob([content], {
+        type: "application/json"
+    });
 
     const url = URL.createObjectURL(blob);
+
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = `KIJ-Carrelage-Pro-sauvegarde-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `kij-carrelage-pro-${Date.now()}.json`;
 
     document.body.appendChild(link);
     link.click();
     link.remove();
 
     URL.revokeObjectURL(url);
-    notify("Sauvegarde exportée.");
+
+    notify("Exportation JSON terminée.");
 }
 
-function importProjects(event) {
-    const file = event.target.files?.[0];
+function importProjects(file) {
     if (!file) return;
 
     const reader = new FileReader();
@@ -1011,119 +2113,414 @@ function importProjects(event) {
             const imported = JSON.parse(reader.result);
 
             if (!Array.isArray(imported)) {
-                throw new Error("Format invalide");
+                throw new Error("Format JSON invalide");
             }
 
-            const existing = readProjects();
+            const existing = getSavedProjects();
 
-            imported.forEach((project) => {
-                if (
-                    project &&
-                    project.id &&
-                    project.project &&
-                    Array.isArray(project.rooms)
-                ) {
-                    const index = existing.findIndex((item) => item.id === project.id);
+            const validProjects = imported.filter(project =>
+                project &&
+                typeof project.id === "string" &&
+                project.data &&
+                typeof project.data === "object"
+            );
 
-                    if (index >= 0) {
-                        existing[index] = project;
-                    } else {
-                        existing.push(project);
-                    }
+            if (!validProjects.length) {
+                throw new Error("Aucun projet valide");
+            }
+
+            const merged = [...existing];
+
+            validProjects.forEach(project => {
+                const index = merged.findIndex(item => item.id === project.id);
+
+                if (index >= 0) {
+                    merged[index] = project;
+                } else {
+                    merged.push(project);
                 }
             });
 
-            if (!writeProjects(existing)) return;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
 
-            renderProjects();
-            notify("Sauvegarde importée.");
-        } catch (error) {
-            console.error(error);
-            notify("Fichier JSON invalide ou endommagé.");
+            renderSavedProjects();
+
+            notify(`${validProjects.length} projet(s) importé(s).`);
+        } catch {
+            notify("Fichier JSON invalide ou impossible à importer.", "error");
         }
 
-        event.target.value = "";
+        $("#importerDonnees").value = "";
+    };
+
+    reader.onerror = () => {
+        notify("Erreur pendant la lecture du fichier.", "error");
     };
 
     reader.readAsText(file);
 }
 
+
 /* =========================================
-   12. NOUVEAU PROJET
+   20. NOUVEAU PROJET
 ========================================= */
 
 function newProject() {
-    if (!confirm("Créer un nouveau projet ? Les modifications non enregistrées seront perdues.")) {
-        return;
-    }
+    const confirmed = window.confirm(
+        "Créer un nouveau projet ? Les modifications non enregistrées seront perdues."
+    );
 
-    document.querySelectorAll(
-        "#nomProjet, #nomClient, #nomPrestataire, #adresseProjet, " +
-        "#prixCarreaux, #prixPlinthes, #prixFaience, #prixCiment, " +
-        "#prixSable, #prixMainOeuvre, #longueurpiece, #largeurpiece"
-    ).forEach((input) => {
-        input.value = "";
+    if (!confirmed) return;
+
+    $$("input, select, textarea").forEach(element => {
+        if (element.type === "file") return;
+
+        if (element.type === "checkbox") {
+            element.checked = element.defaultChecked;
+        } else if (element.id === "devise") {
+            element.value = "USD";
+        } else if (element.id === "nombrepieces") {
+            element.value = "1";
+        } else if (element.id === "dateProjet") {
+            element.value = new Date().toISOString().slice(0, 10);
+        } else if (element.type === "number") {
+            element.value = element.defaultValue;
+        } else {
+            element.value = element.defaultValue;
+        }
     });
 
-    $("devise").value = "USD";
-    $("nombrepieces").value = "1";
-    $("tauxpertes").value = "10";
-    $("epaisseurMortierSol").value = "3";
-    $("hauteurplinthe").value = "";
-    $("epaisseurpose").value = "1.5";
-
     createRooms();
-    setText("saveStatus", "Nouveau projet");
+
+    state.floor = null;
+    state.skirting = null;
+    state.wall = null;
+    state.materials = {};
+    state.quoteLines = [];
+    state.transport = 0;
+    state.labor = 0;
+    state.subtotal = 0;
+    state.margin = 0;
+    state.total = 0;
+
+    clearAllResults();
+    updateMethodPanels();
+    updateDimensionPanels();
+
+    setHTML("zoneDevis", `
+        <p class="muted">
+            Le devis professionnel sera affiché ici après sa génération.
+        </p>
+    `);
+
     notify("Nouveau projet créé.");
 }
 
+
 /* =========================================
-   13. DATES DU PIED DE PAGE
+   21. AFFICHAGE DES OPTIONS DE POSE
 ========================================= */
+
+function updateMethodPanels() {
+    const methods = [
+        {
+            select: "methodePoseSol",
+            mortar: "parametresMortierSol",
+            adhesive: "parametresColleSol"
+        },
+        {
+            select: "methodePosePlinthes",
+            mortar: "parametresMortierPlinthes",
+            adhesive: "parametresCollePlinthes"
+        },
+        {
+            select: "methodePoseMurs",
+            mortar: "parametresMortierMurs",
+            adhesive: "parametresColleMurs"
+        }
+    ];
+
+    methods.forEach(item => {
+        const method = getValue(item.select, "traditional");
+
+        const mortar = document.getElementById(item.mortar);
+        const adhesive = document.getElementById(item.adhesive);
+
+        if (mortar) {
+            mortar.hidden = method !== "traditional";
+        }
+
+        if (adhesive) {
+            adhesive.hidden = method !== "adhesive";
+        }
+    });
+}
+
+function updateDimensionPanels() {
+    const dimensions = [
+        ["utiliserDimensionsSol", "dimensionsSol"],
+        ["utiliserDimensionsPlinthes", "dimensionsPlinthes"],
+        ["utiliserDimensionsMurs", "dimensionsMurs"]
+    ];
+
+    dimensions.forEach(([checkboxId, panelId]) => {
+        const checkbox = document.getElementById(checkboxId);
+        const panel = document.getElementById(panelId);
+
+        if (!checkbox || !panel) return;
+
+        panel.style.opacity = checkbox.checked ? "1" : "0.55";
+    });
+}
+
+
+/* =========================================
+   22. MISE À JOUR DES INFORMATIONS
+========================================= */
+
+function clearAllResults() {
+    [
+        "resultatsurface",
+        "resultatMortierSol",
+        "resultatperimetre",
+        "resultatplinthes",
+        "resultatfaience"
+    ].forEach(clearResult);
+
+    const tbody = $("#tableauResultats");
+
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="empty-cell">
+                    Aucun calcul effectué pour le moment.
+                </td>
+            </tr>
+        `;
+    }
+
+    setText(
+        "resultStatus",
+        "Les résultats apparaîtront ici après les calculs."
+    );
+}
 
 function updateFooter() {
     setText("currentyear", new Date().getFullYear());
 
-    const modified = $("lastModified");
+    const lastModified = document.lastModified;
 
-    if (modified) {
-        modified.textContent =
-            `Dernière modification de la page : ${document.lastModified}`;
+    if (lastModified) {
+        const date = new Date(lastModified);
+
+        setText(
+            "lastModified",
+            Number.isNaN(date.getTime())
+                ? "Date indisponible"
+                : date.toLocaleDateString("fr-FR")
+        );
+    }
+
+    if ($("#dateProjet") && !$("#dateProjet").value) {
+        $("#dateProjet").value = new Date().toISOString().slice(0, 10);
     }
 }
 
+
 /* =========================================
-   14. INITIALISATION
+   23. ÉVÉNEMENTS
+========================================= */
+
+function attachEvents() {
+
+    $("#ajouterpieces")?.addEventListener("click", createRooms);
+
+    /*
+       Délégation d'événements :
+       fonctionne aussi après le changement de forme géométrique.
+    */
+
+    $("#formulairespieces")?.addEventListener("change", event => {
+        if (event.target.classList.contains("room-shape")) {
+            const room = event.target.closest(".room-card");
+
+            updateRoomDimensions(room, event.target.value);
+
+            clearAllResults();
+        }
+    });
+
+    $("#formulairespieces")?.addEventListener("input", event => {
+        if (
+            event.target.classList.contains("room-dimension") ||
+            event.target.classList.contains("room-name")
+        ) {
+            state.floor = null;
+            state.skirting = null;
+        }
+    });
+
+    $("#formulairespieces")?.addEventListener("click", event => {
+        const button = event.target.closest(".remove-room");
+
+        if (!button) return;
+
+        const rooms = $$(".room-card", $("#formulairespieces"));
+
+        if (rooms.length <= 1) {
+            notify("Il faut conserver au moins une pièce.", "error");
+            return;
+        }
+
+        button.closest(".room-card").remove();
+
+        $$(".room-card", $("#formulairespieces")).forEach((room, index) => {
+            room.dataset.roomIndex = index;
+
+            const heading = $("h3", room);
+
+            if (heading) heading.textContent = `Pièce ${index + 1}`;
+        });
+
+        $("#nombrepieces").value =
+            $$(".room-card", $("#formulairespieces")).length;
+
+        clearAllResults();
+    });
+
+    $("#calculersurfaces")?.addEventListener("click", calculateFloor);
+
+    $("#calculerMortierSol")?.addEventListener("click", () => {
+        if (getSurfaceMethod("sol") === "adhesive") {
+            notify(
+                "Le sol utilise le ciment-colle. Le mortier traditionnel n'est pas calculé.",
+                "error"
+            );
+            return;
+        }
+
+        calculateFloorMortar();
+    });
+
+    $("#calculerperimetre")?.addEventListener("click", calculatePerimeter);
+
+    $("#calculerplinthes")?.addEventListener("click", calculateSkirting);
+
+    $("#calculerfaience")?.addEventListener("click", calculateWall);
+
+    [
+        "methodePoseSol",
+        "methodePosePlinthes",
+        "methodePoseMurs"
+    ].forEach(id => {
+        document.getElementById(id)?.addEventListener(
+            "change",
+            updateMethodPanels
+        );
+    });
+
+    [
+        "utiliserDimensionsSol",
+        "utiliserDimensionsPlinthes",
+        "utiliserDimensionsMurs"
+    ].forEach(id => {
+        document.getElementById(id)?.addEventListener(
+            "change",
+            updateDimensionPanels
+        );
+    });
+
+    $("#genererDevis")?.addEventListener("click", generateQuote);
+
+    $("#imprimerDevis")?.addEventListener("click", printQuote);
+
+    $("#enregistrerProjet")?.addEventListener("click", saveProject);
+
+    $("#nouveauProjet")?.addEventListener("click", newProject);
+
+    $("#exporterDonnees")?.addEventListener("click", exportProjects);
+
+    $("#importerDonnees")?.addEventListener("change", event => {
+        importProjects(event.target.files?.[0]);
+    });
+
+    $("#listeProjets")?.addEventListener("click", event => {
+        const loadButton = event.target.closest(".load-project");
+        const deleteButton = event.target.closest(".delete-project");
+
+        if (loadButton) {
+            loadProject(loadButton.dataset.id);
+        }
+
+        if (deleteButton) {
+            const confirmed = window.confirm(
+                "Voulez-vous vraiment supprimer ce projet ?"
+            );
+
+            if (confirmed) {
+                deleteProject(deleteButton.dataset.id);
+            }
+        }
+    });
+
+    /*
+       Les modifications des paramètres rendent les anciens
+       résultats potentiellement obsolètes.
+    */
+
+    const calculationInputs = [
+        "#configurationCarreaux input",
+        "#configurationCarreaux select",
+        "#sectionSols input",
+        "#sectionSols select",
+        "#poseSol input",
+        "#poseSol select",
+        "#sectionPlinthes input",
+        "#sectionPlinthes select",
+        "#posePlinthes input",
+        "#posePlinthes select",
+        "#sectionMurs input",
+        "#sectionMurs select",
+        "#poseMurs input",
+        "#poseMurs select",
+        "#sectionAccessoires input",
+        "#sectionAccessoires select",
+        "#sectionTransport input",
+        "#sectionTransport select",
+        "#sectionPrix input"
+    ].join(",");
+
+    $$(calculationInputs).forEach(input => {
+        input.addEventListener("input", () => {
+            setText(
+                "resultStatus",
+                "Certains paramètres ont été modifiés. Relancez les calculs pour actualiser les résultats."
+            );
+        });
+    });
+}
+
+
+/* =========================================
+   24. INITIALISATION
 ========================================= */
 
 function initializeApp() {
-    $("ajouterpieces")?.addEventListener("click", () => createRooms());
-
-    $("calculersurfaces")?.addEventListener("click", calculateFloor);
-
-    $("calculerMortierSol")?.addEventListener("click", calculateFloorMortar);
-
-    $("calculerperimetre")?.addEventListener("click", calculatePerimeter);
-
-    $("calculerplinthes")?.addEventListener("click", calculateSkirting);
-
-    $("calculerfaience")?.addEventListener("click", calculateWall);
-
-    $("genererDevis")?.addEventListener("click", generateQuote);
-
-    $("imprimerDevis")?.addEventListener("click", printQuote);
-
-    $("enregistrerProjet")?.addEventListener("click", saveProject);
-
-    $("exporterDonnees")?.addEventListener("click", exportProjects);
-
-    $("importerDonnees")?.addEventListener("change", importProjects);
-
-    $("nouveauProjet")?.addEventListener("click", newProject);
-
     createRooms();
-    renderProjects();
+
+    attachEvents();
+
+    updateMethodPanels();
+
+    updateDimensionPanels();
+
+    renderSavedProjects();
+
     updateFooter();
+
+    clearAllResults();
+
+    console.info("KIJ Carrelage Pro initialisé.");
 }
 
 document.addEventListener("DOMContentLoaded", initializeApp);
