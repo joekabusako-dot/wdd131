@@ -1,51 +1,407 @@
+/* =========================================
+   KIJ CARRELAGE PRO
+   Design professionnel et responsive
+========================================= */
+
 :root {
-    --titre-col: rgb(0 0 0);
-    --butt-col: rgb(225 225 225);
-    --bgtitre-col: rgb(225 225 200);
-    --sectionbg-col: rgb(100 150 150);
-    --border-col: rgb(0 0 125);
+    --primary: #142638;
+    --primary-light: #203c54;
+    --accent: #d98242;
+    --accent-dark: #bd6830;
+    --background: #f3f5f7;
+    --surface: #ffffff;
+    --text: #263442;
+    --muted: #687787;
+    --border: #dce2e8;
+    --success: #198754;
+    --danger: #dc3545;
+    --shadow: 0 5px 20px rgba(20, 38, 56, 0.08);
+    --radius: 12px;
 }
 
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
 
 body {
-    font-family: roboto, sans-serif;
-
-    margin: 0 auto;
-    padding: 0;
-    width: 500px;
-    height: auto;
-
-
-
+    margin: 0;
+    font-family: "Roboto", Arial, sans-serif;
+    background: var(--background);
+    color: var(--text);
+    line-height: 1.6;
 }
 
-h1 {
-    border: 0.5px solid var(--border-col);
-    text-align: center;
-    background-color: var(--sectionbg-col);
-    border-radius: 5px;
+/* HEADER */
+
+.site-header {
+    background: var(--primary);
+    color: white;
+    padding: 22px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 4px solid var(--accent);
 }
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.brand img {
+    width: 65px;
+    height: 65px;
+    border-radius: 12px;
+}
+
+.brand-text h1 {
+    margin: 0;
+    font-size: 1.7rem;
+    color: white;
+    letter-spacing: 0.5px;
+}
+
+.brand-text p {
+    margin: 3px 0 0;
+    color: #d8e0e8;
+    font-size: 0.9rem;
+}
+
+.header-badge {
+    background: var(--accent);
+    color: white;
+    padding: 7px 15px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+}
+
+/* MAIN */
+
+main {
+    width: min(1100px, 92%);
+    margin: 35px auto;
+}
+
+main>h2 {
+    color: var(--primary);
+    font-size: 1.65rem;
+    border-left: 5px solid var(--accent);
+    padding-left: 14px;
+    margin-bottom: 25px;
+}
+
+/* SECTIONS / CARDS */
 
 section {
-    border: 0.1px solid var(--border-col);
-    padding: 8px;
-    background-color: var(--bgtitre-col);
-    border-radius: 5px;
+    background: var(--surface);
+    padding: 25px;
+    margin-bottom: 25px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
 }
 
-footer {
-    border: 1px solid var(--border-col);
-    background-color: var(--bgtitre-col);
-    padding: 10px;
-    border-radius: 5px;
+section h3 {
+    color: var(--primary);
+    font-size: 1.25rem;
+    margin-top: 0;
+    margin-bottom: 20px;
 }
+
+section h4 {
+    color: var(--accent-dark);
+    margin-top: 18px;
+}
+
+/* LABELS */
+
+label {
+    display: block;
+    font-weight: 600;
+    margin: 14px 0 7px;
+    color: var(--primary);
+}
+
+/* INPUTS */
+
+input,
+select {
+    width: 100%;
+    min-height: 45px;
+    padding: 10px 13px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus,
+select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(217, 130, 66, 0.16);
+}
+
+/* BUTTONS */
 
 button {
-    color: var(--titre-col);
-    background-color: var(--butt-col);
-    border-radius: 5px;
+    display: inline-block;
+    margin-top: 15px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary);
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
 }
 
-input {
-    border-radius: 5px;
+button:hover {
+    background: var(--primary-light);
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* ADDITIONAL ACTION BUTTONS */
+
+#ajouterpieces,
+#calculersurfaces,
+#calculerperimetre,
+#calculerplinthes,
+#calculerMortierSol,
+#calculerfaience {
+    background: var(--accent);
+    color: white;
+}
+
+#ajouterpieces:hover,
+#calculersurfaces:hover,
+#calculerperimetre:hover,
+#calculerplinthes:hover,
+#calculerMortierSol:hover,
+#calculerfaience:hover {
+    background: var(--accent-dark);
+}
+
+/* DYNAMIC ROOM FORMS */
+
+#formulairespieces {
+    margin-top: 20px;
+}
+
+.piece-form {
+    background: #f7f9fb;
+    padding: 20px;
+    margin-bottom: 18px;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 9px;
+}
+
+.piece-form h4 {
+    color: var(--primary);
+    margin-top: 0;
+}
+
+/* DIMENSIONS */
+
+.dimensions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 15px;
+    margin-top: 10px;
+}
+
+.dimensions label {
+    align-self: end;
+}
+
+.dimensions input {
+    margin-bottom: 5px;
+}
+
+/* RESULTS */
+
+#resultatsurface,
+#resultatperimetre,
+#resultatplinthes,
+#resultatMortierSol,
+#resultatfaience {
+    background: #f0f5f8;
+    border-left: 4px solid var(--success);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 20px;
+    overflow-wrap: anywhere;
+}
+
+#resultatsurface:empty,
+#resultatperimetre:empty,
+#resultatplinthes:empty,
+#resultatMortierSol:empty,
+#resultatfaience:empty {
+    display: none;
+}
+
+#resultatMortierSol h3,
+#resultatfaience h3 {
+    color: var(--primary);
+    margin-top: 0;
+}
+
+#resultatMortierSol strong,
+#resultatfaience strong {
+    color: var(--success);
+}
+
+/* PLINTHES */
+
+#etapehauteur {
+    background: #fafafa;
+    padding: 18px;
+    border-radius: 8px;
+    margin-top: 15px;
+    border: 1px solid var(--border);
+}
+
+[hidden] {
+    display: none !important;
+}
+
+/* FOOTER */
+
+footer {
+    background: var(--primary);
+    color: #e5edf4;
+    text-align: center;
+    padding: 25px 15px;
+    margin-top: 50px;
+    font-size: 0.9rem;
+}
+
+footer p {
+    margin: 5px 0;
+}
+
+/* ACCESSIBILITY */
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+
+/* TABLETS */
+
+@media screen and (min-width: 600px) {
+    main {
+        width: 90%;
+    }
+
+    section {
+        padding: 30px;
+    }
+
+    .dimensions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* DESKTOP */
+
+@media screen and (min-width: 900px) {
+    main {
+        width: min(1100px, 88%);
+    }
+
+    .site-header {
+        padding-left: max(6%, calc((100% - 1100px) / 2));
+        padding-right: max(6%, calc((100% - 1100px) / 2));
+    }
+
+    section {
+        padding: 35px;
+    }
+
+    .dimensions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* MOBILE */
+
+@media screen and (max-width: 599px) {
+    .site-header {
+        padding: 16px 4%;
+    }
+
+    .brand {
+        gap: 9px;
+    }
+
+    .brand img {
+        width: 48px;
+        height: 48px;
+    }
+
+    .brand-text h1 {
+        font-size: 1.15rem;
+    }
+
+    .brand-text p {
+        font-size: 0.72rem;
+    }
+
+    .header-badge {
+        font-size: 0.65rem;
+        padding: 6px 9px;
+    }
+
+    main {
+        width: 94%;
+        margin: 22px auto;
+    }
+
+    main>h2 {
+        font-size: 1.35rem;
+    }
+
+    section {
+        padding: 18px;
+        margin-bottom: 18px;
+    }
+
+    section h3 {
+        font-size: 1.1rem;
+    }
+
+    .dimensions {
+        grid-template-columns: 1fr;
+    }
+
+    button {
+        width: 100%;
+        padding: 13px;
+    }
+
+    footer {
+        font-size: 0.8rem;
+    }
 }

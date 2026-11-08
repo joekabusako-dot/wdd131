@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+    <rect width="300" height="300" rx="55" fill="#142638"/>
+    <g fill="none" stroke="#D98242" stroke-width="10">
+        <path d="M55 55 H145 V145 H55 Z"/>
+        <path d="M155 55 H245 V145 H155 Z"/>
+        <path d="M55 155 H145 V245 H55 Z"/>
+        <path d="M155 155 H245 V245 H155 Z"/>
+    </g>
+    <path d="M55 100 H145 M100 55 V145 M155 100 H245 M200 55 V145"
+          stroke="#F5F2EA" stroke-width="4"/>
+    <text x="150" y="285" text-anchor="middle"
+          font-family="Arial" font-size="22" font-weight="bold"
+          fill="#F5F2EA">KIJ PRO</text>
+</svg>

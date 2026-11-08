@@ -6,32 +6,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KIJ Carrelage Pro</title>
     <meta name="description"
-        content="KIJ Carrelage Pro, est un outil puissant pour les prestateurs du domaine de BTP qui aide à estimer les quantités et les prix pour les travaux de carrelage.">
-    <meta name="author" content="Ingénieur Joe Kabusako iviti">
+        content="KIJ Carrelage Pro aide les professionnels du BTP à estimer les quantités de matériaux pour les travaux de carrelage.">
+
+
+    <!-- Identité du site -->
+    <meta name="theme-color" content="#142638">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="images/kij-logo.svg">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="KIJ Carrelage Pro | Calculateur BTP">
+    <meta property="og:description"
+        content="Estimez vos surfaces de carrelage, plinthes, mortier, ciment et sable avec KIJ Carrelage Pro.">
+    <meta property="og:image" content="https://TON-DOMAINE/images/kij-og-image.png">
+    <meta property="og:url" content="https://TON-DOMAINE/">
+    <meta property="og:site_name" content="KIJ Carrelage Pro">
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="KIJ Carrelage Pro">
+    <meta name="twitter:description" content="Le calculateur professionnel pour vos travaux de carrelage.">
+    <meta name="twitter:image" content="https://TON-DOMAINE/images/kij-og-image.png">
+    <meta name="author" content="Ingénieur Joe Kabusako Iviti">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="styles/tile.css">
     <script src="scripts/tile.js" defer></script>
-
 </head>
 
 <body>
-    <header>
-        <h1>KIJ Carrelage Pro</h1>
-        <p>Le calculateur simple et agréé pour vos travaux de carrelage</p>
+    <header class="site-header">
+        <div class="brand">
+            <img src="images/kij-logo.svg" alt="Logo KIJ Carrelage Pro">
+            <div class="brand-text">
+                <h1>KIJ Carrelage Pro</h1>
+                <p>Solutions de métré et estimation BTP</p>
+            </div>
+        </div>
+        <span class="header-badge">PRO BTP</span>
     </header>
 
     <main>
-        <h2>A. Calcul Des Carreaux</h2>
+        <h2>A. Calcul des carreaux</h2>
 
         <section>
             <h3>1. Nombre de pièces à carreler</h3>
-            <label for="nombrepieces">Nombre: </label>
-            <input type="number" id="nombrepieces" min="1" step="any">
 
-            <button type="button" id="ajouterpieces">Ajouter Les Pièces</button>
+            <label for="nombrepieces">Nombre de pièces :</label>
+            <input type="number" id="nombrepieces" min="1" step="1" required>
+
+            <button type="button" id="ajouterpieces">Ajouter les pièces</button>
+
             <div id="formulairespieces"></div>
 
             <label for="tauxpertes">Taux de pertes des carreaux :</label>
-
             <select id="tauxpertes">
                 <option value="5">5 %</option>
                 <option value="10" selected>10 %</option>
@@ -41,61 +75,86 @@
 
             <br><br>
 
-            <button type="button" id="calculersurfaces">Calculer les Surfaces</button>
-
+            <button type="button" id="calculersurfaces">Calculer les surfaces</button>
             <p id="resultatsurface"></p>
-
         </section>
 
-        <br><br>
-
-        <section>
-
-
-            <h3>2. Calcul des Faiences</h3>
-            <label for="longueurpiece">Longueur cumulée(m): </label>
-            <input type="number" id="longueurpiece" min="0" step="any">
-            <br><br>
-
-            <label for="largeurpiece">Hauteur Du plaquage(m): </label>
-            <input type="number" id="largeurpiece" min="0" step="any">
-
-        </section>
-
-        <br><br>
-
-        <section>
-            <h3>3. Dimensons des Carreaux</h3>
-            <label for="longueurcarreau">Longeuer Carreaux(cm): </label>
-            <input type="number" id="longueurcarreau" min="0" step="any">
-            <br><br>
-
-            <label for="largeurcarreau">Largeur Carreau(cm): </label>
-            <input type="number" id="largeurcarreau" min="0" step="any">
-
-        </section>
         <br>
 
-        <h2>B. Calcul Du Mortier De Pose </h2>
+        <section id="section-mortier-sol">
+            <h3>Mortier de pose du carrelage au sol</h3>
+
+            <label for="epaisseurMortierSol">
+                Épaisseur de pose (cm)
+            </label>
+            <input type="number" id="epaisseurMortierSol" min="0.1" max="10" step="0.1" value="3">
+
+            <button type="button" id="calculerMortierSol">
+                Calculer le mortier
+            </button>
+
+            <div id="resultatMortierSol" aria-live="polite"></div>
+        </section>
+
+        <br><br>
 
         <section>
-            <h3>1. Epaisseur de La Couche De Pose</h3>
-            <label for="calculmortier">Epaisseur(m): </label>
-            <input type="number" id="calculmortier" min="0" step="any">
+            <h3>2. Calcul des plinthes</h3>
 
+            <button type="button" id="calculerperimetre">
+                Calculer le périmètre total
+            </button>
+
+            <p id="resultatperimetre"></p>
+
+            <div id="etapehauteur" hidden>
+                <label for="hauteurplinthe">Hauteur des plinthes (m) :</label>
+                <input type="number" id="hauteurplinthe" min="0" step="any">
+
+                <br><br>
+
+                <button type="button" id="calculerplinthes">
+                    Calculer les plinthes
+                </button>
+
+                <p id="resultatplinthes"></p>
+            </div>
+        </section>
+
+        <br><br>
+
+        <section>
+            <h3>3. Calcul des Faïences et du Mortier De Plaquage</h3>
+
+            <label for="longueurpiece">Longueur cumulée des murs (m)</label>
+            <input type="number" id="longueurpiece" min="0" step="0.01" placeholder="Ex. : 12">
+
+            <label for="largeurpiece">Hauteur à plaquer (m)</label>
+            <input type="number" id="largeurpiece" min="0" step="0.01" placeholder="Ex. : 2.4">
+
+            <label for="epaisseurpose">Épaisseur du mortier (cm)</label>
+            <input type="number" id="epaisseurpose" min="0.1" max="10" step="0.1" value="1.5">
+
+            <button type="button" id="calculerfaience">
+                Calculer les matériaux
+            </button>
+
+            <div id="resultatfaience" aria-live="polite"></div>
         </section>
         <br><br>
 
-        <button id="calculer">Calculer</button>
-        <p id="resultat">Résultat:</p>
 
     </main>
 
     <footer>
-        <p>&copy;<span id="currentyear"></span> 👷‍♂️Joe Kabusako Iviti👷‍♂️ Congo-Kinshasa .All rights reserved.</p>
+        
+        <p>&copy; <span id="currentyear"></span> 👷‍♂️ Joe Kabusako Iviti, Etudiant a BYU-Idaho En BS Software
+            Development 👷‍♂️ Congo-Kinshasa. All rights reserved.</p>
         <p id="lastModified"></p>
-    </footer>
 
+        <p>Whatsap: +243890119831</p>
+        <p>Email:joekabusako@gmail.com</p>
+    </footer>
 </body>
 
 </html>
