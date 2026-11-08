@@ -4,157 +4,1437 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KIJ Carrelage Pro</title>
+
+    <title>KIJ Carrelage Pro | Métré, Matériaux et Devis</title>
+
     <meta name="description"
-        content="KIJ Carrelage Pro aide les professionnels du BTP à estimer les quantités de matériaux pour les travaux de carrelage.">
+        content="KIJ Carrelage Pro est un outil professionnel de métré, calcul des carreaux, mortier, ciment-colle, matériaux, transport et établissement de devis pour les travaux de carrelage.">
 
-
-    <!-- Identité du site -->
+    <meta name="author" content="Ingénieur Joe Kabusako Iviti">
     <meta name="theme-color" content="#142638">
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="images/kij-logo.svg">
-
-    <!-- Open Graph -->
+    <!-- Open Graph : remplacer les URL provisoires lors de la publication -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="KIJ Carrelage Pro | Calculateur BTP">
-    <meta property="og:description"
-        content="Estimez vos surfaces de carrelage, plinthes, mortier, ciment et sable avec KIJ Carrelage Pro.">
-    <meta property="og:image" content="https://TON-DOMAINE/images/kij-og-image.png">
-    <meta property="og:url" content="https://TON-DOMAINE/">
-    <meta property="og:site_name" content="KIJ Carrelage Pro">
+    <meta property="og:title" content="KIJ Carrelage Pro">
+    <meta property="og:description" content="Calculateur professionnel pour les travaux de carrelage et les devis BTP.">
+    <meta property="og:image" content="images/kij-og-image.png">
+    <meta property="og:url" content="">
 
-    <!-- Twitter / X -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="KIJ Carrelage Pro">
-    <meta name="twitter:description" content="Le calculateur professionnel pour vos travaux de carrelage.">
-    <meta name="twitter:image" content="https://TON-DOMAINE/images/kij-og-image.png">
-    <meta name="author" content="Ingénieur Joe Kabusako Iviti">
+    <link rel="icon" href="images/kij-logo.svg" type="image/svg+xml">
 
+    <!-- Polices -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
 
+    <!-- Feuilles de style -->
+    <link rel="stylesheet" href="styles/normalize.css">
     <link rel="stylesheet" href="styles/tile.css">
+
+    <!-- JavaScript -->
     <script src="scripts/tile.js" defer></script>
 </head>
 
 <body>
-    <header class="site-header">
-        <div class="brand">
+
+    <!-- =========================================
+         EN-TÊTE
+    ========================================== -->
+
+    <header class="site-header no-print">
+
+        <a href="index.html" class="brand">
             <img src="images/kij-logo.svg" alt="Logo KIJ Carrelage Pro">
-            <div class="brand-text">
-                <h1>KIJ Carrelage Pro</h1>
-                <p>Solutions de métré et estimation BTP</p>
-            </div>
+
+            <span class="brand-text">
+                <strong>KIJ CARRELAGE PRO</strong>
+                <small>Métré • Matériaux • Devis BTP</small>
+            </span>
+        </a>
+
+        <div class="header-actions">
+            <span class="edition-tag">ÉDITION PROFESSIONNELLE</span>
+            <span class="status-pill">Version locale</span>
         </div>
-        <span class="header-badge">PRO BTP</span>
+
     </header>
 
-    <main>
-        <h2>A. Calcul des carreaux</h2>
 
-        <section>
-            <h3>1. Nombre de pièces à carreler</h3>
+    <main class="app-shell">
 
-            <label for="nombrepieces">Nombre de pièces :</label>
-            <input type="number" id="nombrepieces" min="1" step="1" required>
+        <!-- =========================================
+             SECTION DE PRÉSENTATION
+        ========================================== -->
 
-            <button type="button" id="ajouterpieces">Ajouter les pièces</button>
+        <section class="hero no-print">
 
-            <div id="formulairespieces"></div>
+            <div>
+                <p class="eyebrow">SOLUTION DE MÉTRÉ ET DE CHIFFRAGE BTP</p>
 
-            <label for="tauxpertes">Taux de pertes des carreaux :</label>
-            <select id="tauxpertes">
-                <option value="5">5 %</option>
-                <option value="10" selected>10 %</option>
-                <option value="15">15 %</option>
-                <option value="20">20 %</option>
-            </select>
+                <h1>KIJ Carrelage Pro</h1>
 
-            <br><br>
+                <p class="hero-copy">
+                    Le calculateur simple et professionnel pour préparer
+                    vos travaux de carrelage, estimer les matériaux,
+                    calculer les coûts et produire des devis détaillés.
+                </p>
+            </div>
 
-            <button type="button" id="calculersurfaces">Calculer les surfaces</button>
-            <p id="resultatsurface"></p>
+            <div class="hero-mark" aria-hidden="true">
+                <div class="tile tile-one"></div>
+                <div class="tile tile-two"></div>
+                <div class="tile tile-three"></div>
+                <div class="tile tile-four"></div>
+            </div>
+
         </section>
 
-        <br>
 
-        <section id="section-mortier-sol">
-            <h3>Mortier de pose du carrelage au sol</h3>
+        <!-- =========================================
+             1. INFORMATIONS DU PROJET
+        ========================================== -->
 
-            <label for="epaisseurMortierSol">
-                Épaisseur de pose (cm)
-            </label>
-            <input type="number" id="epaisseurMortierSol" min="0.1" max="10" step="0.1" value="3">
+        <section class="panel no-print" id="informationsProjet">
 
-            <button type="button" id="calculerMortierSol">
-                Calculer le mortier
-            </button>
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">ÉTAPE 01</p>
+                    <h2>Informations du projet</h2>
+                </div>
 
-            <div id="resultatMortierSol" aria-live="polite"></div>
+                <span class="step-number">01</span>
+            </div>
+
+            <div class="form-grid three-cols">
+
+                <div class="field">
+                    <label for="nomProjet">Nom du projet</label>
+                    <input type="text" id="nomProjet" placeholder="Ex. Carrelage résidence">
+                </div>
+
+                <div class="field">
+                    <label for="nomClient">Nom du client</label>
+                    <input type="text" id="nomClient" placeholder="Nom du client">
+                </div>
+
+                <div class="field">
+                    <label for="nomPrestataire">Entreprise / Prestataire</label>
+                    <input type="text" id="nomPrestataire" placeholder="Nom de l'entreprise">
+                </div>
+
+                <div class="field">
+                    <label for="adresseProjet">Adresse du chantier</label>
+                    <input type="text" id="adresseProjet" placeholder="Commune, quartier, avenue...">
+                </div>
+
+                <div class="field">
+                    <label for="dateProjet">Date du devis</label>
+                    <input type="date" id="dateProjet">
+                </div>
+
+                <div class="field">
+                    <label for="devise">Devise</label>
+                    <select id="devise">
+                        <option value="USD" selected>Dollar américain (USD)</option>
+                        <option value="CDF">Franc congolais (CDF)</option>
+                        <option value="EUR">Euro (EUR)</option>
+                    </select>
+                </div>
+
+            </div>
+
         </section>
 
-        <br><br>
 
-        <section>
-            <h3>2. Calcul des plinthes</h3>
+        <!-- =========================================
+             2. DIMENSIONS COMMUNES DES CARREAUX
+        ========================================== -->
 
-            <button type="button" id="calculerperimetre">
-                Calculer le périmètre total
-            </button>
+        <section class="panel no-print" id="configurationCarreaux">
 
-            <p id="resultatperimetre"></p>
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">CONFIGURATION GÉNÉRALE</p>
+                    <h2>Dimensions des carreaux</h2>
+                </div>
 
-            <div id="etapehauteur" hidden>
-                <label for="hauteurplinthe">Hauteur des plinthes (m) :</label>
-                <input type="number" id="hauteurplinthe" min="0" step="any">
+                <span class="step-number">02</span>
+            </div>
 
-                <br><br>
+            <p class="muted">
+                Définissez les dimensions habituelles de vos carreaux.
+                Vous pourrez utiliser ces dimensions pour chaque surface
+                ou choisir des dimensions particulières.
+            </p>
 
-                <button type="button" id="calculerplinthes">
+            <div class="form-grid three-cols">
+
+                <div class="field">
+                    <label for="longueurCarreau">Longueur du carreau (cm)</label>
+                    <input type="number" id="longueurCarreau" min="1" step="0.1" value="60">
+                </div>
+
+                <div class="field">
+                    <label for="largeurCarreau">Largeur du carreau (cm)</label>
+                    <input type="number" id="largeurCarreau" min="1" step="0.1" value="60">
+                </div>
+
+                <div class="field">
+                    <label for="epaisseurCarreau">Épaisseur (mm)</label>
+                    <input type="number" id="epaisseurCarreau" min="1" step="0.1" value="10">
+                </div>
+
+                <div class="field">
+                    <label for="largeurJoint">Largeur du joint (mm)</label>
+                    <input type="number" id="largeurJoint" min="0" step="0.1" value="3">
+                </div>
+
+                <div class="field">
+                    <label for="carreauxParCarton">Carreaux par carton</label>
+                    <input type="number" id="carreauxParCarton" min="1" step="1" value="4">
+                </div>
+
+                <div class="field">
+                    <label for="surfaceCarton">Surface par carton (m²)</label>
+                    <input type="number" id="surfaceCarton" min="0" step="0.01"
+                        placeholder="Calcul automatique si vide">
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             3. MÉTRÉ DES SOLS
+        ========================================== -->
+
+        <section class="panel no-print" id="sectionSols">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">ÉTAPE 02</p>
+                    <h2>Métré des surfaces au sol</h2>
+                </div>
+
+                <span class="step-number">03</span>
+            </div>
+
+            <p class="muted">
+                Ajoutez les pièces du bâtiment et sélectionnez leur forme
+                géométrique. Chaque pièce sera calculée séparément.
+            </p>
+
+            <div class="inline-fields">
+
+                <div class="field compact">
+                    <label for="nombrepieces">Nombre de pièces</label>
+                    <input type="number" id="nombrepieces" min="1" max="100" value="1">
+                </div>
+
+                <button type="button" class="button button-primary" id="ajouterpieces">
+                    Ajouter les pièces
+                </button>
+
+            </div>
+
+            <div id="formulairespieces" class="rooms-grid">
+
+                <!-- Les formulaires des pièces seront générés en JavaScript -->
+
+            </div>
+
+            <div class="sub-panel">
+
+                <h3>Configuration des carreaux du sol</h3>
+
+                <div class="field">
+                    <label for="utiliserDimensionsSol">
+                        <input type="checkbox" id="utiliserDimensionsSol">
+                        Utiliser des dimensions particulières pour le sol
+                    </label>
+                </div>
+
+                <div class="form-grid three-cols" id="dimensionsSol">
+
+                    <div class="field">
+                        <label for="longueurCarreauSol">Longueur (cm)</label>
+                        <input type="number" id="longueurCarreauSol" min="1" step="0.1" value="60">
+                    </div>
+
+                    <div class="field">
+                        <label for="largeurCarreauSol">Largeur (cm)</label>
+                        <input type="number" id="largeurCarreauSol" min="1" step="0.1" value="60">
+                    </div>
+
+                    <div class="field">
+                        <label for="epaisseurCarreauSol">Épaisseur (mm)</label>
+                        <input type="number" id="epaisseurCarreauSol" min="1" step="0.1" value="10">
+                    </div>
+
+                    <div class="field">
+                        <label for="jointSol">Largeur du joint (mm)</label>
+                        <input type="number" id="jointSol" min="0" step="0.1" value="3">
+                    </div>
+
+                    <div class="field">
+                        <label for="piecesCartonSol">Carreaux par carton</label>
+                        <input type="number" id="piecesCartonSol" min="1" step="1" value="4">
+                    </div>
+
+                    <div class="field">
+                        <label for="surfaceCartonSol">Surface par carton (m²)</label>
+                        <input type="number" id="surfaceCartonSol" min="0" step="0.01">
+                    </div>
+
+                </div>
+
+                <div class="field compact">
+                    <label for="tauxpertes">Taux de pertes du sol</label>
+                    <select id="tauxpertes">
+                        <option value="5">5 %</option>
+                        <option value="10" selected>10 %</option>
+                        <option value="15">15 %</option>
+                        <option value="20">20 %</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="calculation-bar">
+
+                <button type="button" class="button button-secondary" id="calculersurfaces">
+                    Calculer les surfaces du sol
+                </button>
+
+            </div>
+
+            <div id="resultatsurface" class="result-message" aria-live="polite"></div>
+
+        </section>
+
+
+        <!-- =========================================
+             4. MÉTHODE DE POSE DU SOL
+        ========================================== -->
+
+        <section class="panel no-print" id="poseSol">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">TECHNIQUE DE POSE</p>
+                    <h2>Pose du carrelage au sol</h2>
+                </div>
+
+                <span class="step-number">04</span>
+            </div>
+
+            <div class="field">
+                <label for="methodePoseSol">Méthode de pose</label>
+                <select id="methodePoseSol">
+                    <option value="traditional">Mortier traditionnel</option>
+                    <option value="adhesive">Ciment-colle</option>
+                </select>
+            </div>
+
+            <div class="sub-panel" id="parametresMortierSol">
+
+                <h3>Paramètres du mortier traditionnel</h3>
+
+                <div class="form-grid three-cols">
+
+                    <div class="field">
+                        <label for="epaisseurMortierSol">
+                            Épaisseur du mortier (cm)
+                        </label>
+                        <input type="number" id="epaisseurMortierSol" min="0.1" step="0.1" value="3">
+                    </div>
+
+                    <div class="field">
+                        <label for="ratioCimentSol">Dosage ciment (parties)</label>
+                        <input type="number" id="ratioCimentSol" min="1" step="1" value="1">
+                    </div>
+
+                    <div class="field">
+                        <label for="ratioSableSol">Dosage sable (parties)</label>
+                        <input type="number" id="ratioSableSol" min="1" step="1" value="4">
+                    </div>
+
+                    <div class="field">
+                        <label for="facteurSecSol">Facteur volume sec</label>
+                        <input type="number" id="facteurSecSol" min="1" step="0.01" value="1.33">
+                    </div>
+
+                    <div class="field">
+                        <label for="margeMortierSol">Marge supplémentaire (%)</label>
+                        <input type="number" id="margeMortierSol" min="0" step="1" value="20">
+                    </div>
+
+                    <div class="field">
+                        <label for="volumeSacCimentSol">
+                            Volume d'un sac de ciment (m³)
+                        </label>
+                        <input type="number" id="volumeSacCimentSol" min="0.001" step="0.001" value="0.035">
+                    </div>
+
+                    <div class="field">
+                        <label for="densiteSableSol">
+                            Masse volumique du sable (t/m³)
+                        </label>
+                        <input type="number" id="densiteSableSol" min="0.1" step="0.1" value="1.6">
+                    </div>
+
+                </div>
+
+                <button type="button" class="button button-primary" id="calculerMortierSol">
+                    Calculer le mortier du sol
+                </button>
+
+                <div id="resultatMortierSol" class="result-message" aria-live="polite"></div>
+
+            </div>
+
+            <div class="sub-panel" id="parametresColleSol" hidden>
+
+                <h3>Paramètres du ciment-colle</h3>
+
+                <div class="form-grid three-cols">
+
+                    <div class="field">
+                        <label for="consommationColleSol">
+                            Consommation (kg/m²)
+                        </label>
+                        <input type="number" id="consommationColleSol" min="0.1" step="0.1" value="4">
+                    </div>
+
+                    <div class="field">
+                        <label for="poidsSacColleSol">
+                            Poids d'un sac (kg)
+                        </label>
+                        <input type="number" id="poidsSacColleSol" min="1" step="1" value="25">
+                    </div>
+
+                </div>
+
+                <p class="disclaimer">
+                    La consommation réelle dépend du produit, du support,
+                    du peigne utilisé et des recommandations du fabricant.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             5. MÉTRÉ DES PLINTHES
+        ========================================== -->
+
+        <section class="panel no-print" id="sectionPlinthes">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">ÉTAPE 03</p>
+                    <h2>Calcul des plinthes</h2>
+                </div>
+
+                <span class="step-number">05</span>
+            </div>
+
+            <p class="muted">
+                Le périmètre peut être calculé à partir des pièces.
+                Vous pouvez également déduire les ouvertures selon le chantier.
+            </p>
+
+            <div class="form-grid three-cols">
+
+                <div class="field">
+                    <label for="deductionOuverturesPlinthes">
+                        Largeur totale des ouvertures à déduire (m)
+                    </label>
+                    <input type="number" id="deductionOuverturesPlinthes" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="hauteurplinthe">Hauteur des plinthes (cm)</label>
+                    <input type="number" id="hauteurplinthe" min="1" step="0.1" value="10">
+                </div>
+
+                <div class="field">
+                    <label for="pertesPlinthes">Pertes des plinthes</label>
+                    <select id="pertesPlinthes">
+                        <option value="5">5 %</option>
+                        <option value="10" selected>10 %</option>
+                        <option value="15">15 %</option>
+                        <option value="20">20 %</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="inline-fields">
+
+                <button type="button" class="button button-secondary" id="calculerperimetre">
+                    Calculer le périmètre
+                </button>
+
+                <button type="button" class="button button-primary" id="calculerplinthes">
                     Calculer les plinthes
                 </button>
 
-                <p id="resultatplinthes"></p>
             </div>
+
+            <div id="resultatperimetre" class="result-message" aria-live="polite"></div>
+
+            <div id="resultatplinthes" class="result-message" aria-live="polite"></div>
+
+            <div class="sub-panel">
+
+                <h3>Dimensions des carreaux de plinthes</h3>
+
+                <label class="field">
+                    <span>
+                        <input type="checkbox" id="utiliserDimensionsPlinthes">
+                        Utiliser des dimensions particulières
+                    </span>
+                </label>
+
+                <div class="form-grid three-cols" id="dimensionsPlinthes">
+
+                    <div class="field">
+                        <label for="longueurCarreauPlinthes">
+                            Longueur (cm)
+                        </label>
+                        <input type="number" id="longueurCarreauPlinthes" min="1" step="0.1" value="60">
+                    </div>
+
+                    <div class="field">
+                        <label for="largeurCarreauPlinthes">
+                            Largeur (cm)
+                        </label>
+                        <input type="number" id="largeurCarreauPlinthes" min="1" step="0.1" value="10">
+                    </div>
+
+                    <div class="field">
+                        <label for="epaisseurCarreauPlinthes">
+                            Épaisseur (mm)
+                        </label>
+                        <input type="number" id="epaisseurCarreauPlinthes" min="1" step="0.1" value="10">
+                    </div>
+
+                    <div class="field">
+                        <label for="jointPlinthes">Largeur du joint (mm)</label>
+                        <input type="number" id="jointPlinthes" min="0" step="0.1" value="3">
+                    </div>
+
+                    <div class="field">
+                        <label for="piecesCartonPlinthes">
+                            Carreaux par carton
+                        </label>
+                        <input type="number" id="piecesCartonPlinthes" min="1" step="1" value="4">
+                    </div>
+
+                    <div class="field">
+                        <label for="surfaceCartonPlinthes">
+                            Surface par carton (m²)
+                        </label>
+                        <input type="number" id="surfaceCartonPlinthes" min="0" step="0.01">
+                    </div>
+
+                </div>
+
+            </div>
+
         </section>
 
-        <br><br>
 
-        <section>
-            <h3>3. Calcul des Faïences et du Mortier De Plaquage</h3>
+        <!-- =========================================
+             6. MÉTHODE DE POSE DES PLINTHES
+        ========================================== -->
 
-            <label for="longueurpiece">Longueur cumulée des murs (m)</label>
-            <input type="number" id="longueurpiece" min="0" step="0.01" placeholder="Ex. : 12">
+        <section class="panel no-print" id="posePlinthes">
 
-            <label for="largeurpiece">Hauteur à plaquer (m)</label>
-            <input type="number" id="largeurpiece" min="0" step="0.01" placeholder="Ex. : 2.4">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">TECHNIQUE DE POSE</p>
+                    <h2>Pose des plinthes</h2>
+                </div>
 
-            <label for="epaisseurpose">Épaisseur du mortier (cm)</label>
-            <input type="number" id="epaisseurpose" min="0.1" max="10" step="0.1" value="1.5">
+                <span class="step-number">06</span>
+            </div>
 
-            <button type="button" id="calculerfaience">
-                Calculer les matériaux
+            <div class="field">
+                <label for="methodePosePlinthes">Méthode de pose</label>
+                <select id="methodePosePlinthes">
+                    <option value="traditional">Mortier traditionnel</option>
+                    <option value="adhesive">Ciment-colle</option>
+                </select>
+            </div>
+
+            <div class="sub-panel" id="parametresMortierPlinthes">
+
+                <h3>Mortier traditionnel des plinthes</h3>
+
+                <div class="form-grid three-cols">
+
+                    <div class="field">
+                        <label for="epaisseurMortierPlinthes">
+                            Épaisseur (cm)
+                        </label>
+                        <input type="number" id="epaisseurMortierPlinthes" min="0.1" step="0.1" value="1.5">
+                    </div>
+
+                    <div class="field">
+                        <label for="ratioCimentPlinthes">Dosage ciment</label>
+                        <input type="number" id="ratioCimentPlinthes" min="1" step="1" value="1">
+                    </div>
+
+                    <div class="field">
+                        <label for="ratioSablePlinthes">Dosage sable</label>
+                        <input type="number" id="ratioSablePlinthes" min="1" step="1" value="4">
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="sub-panel" id="parametresCollePlinthes" hidden>
+
+                <h3>Ciment-colle des plinthes</h3>
+
+                <div class="form-grid">
+
+                    <div class="field">
+                        <label for="consommationCollePlinthes">
+                            Consommation (kg/m²)
+                        </label>
+                        <input type="number" id="consommationCollePlinthes" min="0.1" step="0.1" value="4">
+                    </div>
+
+                    <div class="field">
+                        <label for="poidsSacCollePlinthes">
+                            Poids d'un sac (kg)
+                        </label>
+                        <input type="number" id="poidsSacCollePlinthes" min="1" step="1" value="25">
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             7. MÉTRÉ DES MURS / FAÏENCE
+        ========================================== -->
+
+        <section class="panel no-print" id="sectionMurs">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">ÉTAPE 04</p>
+                    <h2>Calcul des murs et faïences</h2>
+                </div>
+
+                <span class="step-number">07</span>
+            </div>
+
+            <p class="muted">
+                Renseignez la longueur cumulée des murs à carreler,
+                la hauteur du revêtement et la surface des ouvertures à déduire.
+            </p>
+
+            <div class="form-grid three-cols">
+
+                <div class="field">
+                    <label for="longueurpiece">
+                        Longueur cumulée des murs (m)
+                    </label>
+                    <input type="number" id="longueurpiece" min="0" step="0.01" placeholder="Ex. 25">
+                </div>
+
+                <div class="field">
+                    <label for="largeurpiece">
+                        Hauteur du revêtement (m)
+                    </label>
+                    <input type="number" id="largeurpiece" min="0" step="0.01" placeholder="Ex. 2.40">
+                </div>
+
+                <div class="field">
+                    <label for="ouverturesMurs">
+                        Surface des ouvertures à déduire (m²)
+                    </label>
+                    <input type="number" id="ouverturesMurs" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="epaisseurpose">
+                        Épaisseur de pose (cm)
+                    </label>
+                    <input type="number" id="epaisseurpose" min="0.1" step="0.1" value="1.5">
+                </div>
+
+                <div class="field">
+                    <label for="pertesMurs">Pertes des murs</label>
+                    <select id="pertesMurs">
+                        <option value="5">5 %</option>
+                        <option value="10" selected>10 %</option>
+                        <option value="15">15 %</option>
+                        <option value="20">20 %</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="sub-panel">
+
+                <h3>Dimensions des carreaux muraux</h3>
+
+                <label class="field">
+                    <span>
+                        <input type="checkbox" id="utiliserDimensionsMurs">
+                        Utiliser des dimensions particulières
+                    </span>
+                </label>
+
+                <div class="form-grid three-cols" id="dimensionsMurs">
+
+                    <div class="field">
+                        <label for="longueurCarreauMurs">Longueur (cm)</label>
+                        <input type="number" id="longueurCarreauMurs" min="1" step="0.1" value="30">
+                    </div>
+
+                    <div class="field">
+                        <label for="largeurCarreauMurs">Largeur (cm)</label>
+                        <input type="number" id="largeurCarreauMurs" min="1" step="0.1" value="60">
+                    </div>
+
+                    <div class="field">
+                        <label for="epaisseurCarreauMurs">Épaisseur (mm)</label>
+                        <input type="number" id="epaisseurCarreauMurs" min="1" step="0.1" value="8">
+                    </div>
+
+                    <div class="field">
+                        <label for="jointMurs">Largeur du joint (mm)</label>
+                        <input type="number" id="jointMurs" min="0" step="0.1" value="3">
+                    </div>
+
+                    <div class="field">
+                        <label for="piecesCartonMurs">Carreaux par carton</label>
+                        <input type="number" id="piecesCartonMurs" min="1" step="1" value="6">
+                    </div>
+
+                    <div class="field">
+                        <label for="surfaceCartonMurs">Surface par carton (m²)</label>
+                        <input type="number" id="surfaceCartonMurs" min="0" step="0.01">
+                    </div>
+
+                </div>
+
+            </div>
+
+            <button type="button" class="button button-primary" id="calculerfaience">
+                Calculer les surfaces murales
             </button>
 
-            <div id="resultatfaience" aria-live="polite"></div>
-        </section>
-        <br><br>
+            <div id="resultatfaience" class="result-message" aria-live="polite"></div>
 
+        </section>
+
+
+        <!-- =========================================
+             8. MÉTHODE DE POSE DES MURS
+        ========================================== -->
+
+        <section class="panel no-print" id="poseMurs">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">TECHNIQUE DE POSE</p>
+                    <h2>Pose de la faïence et des murs</h2>
+                </div>
+
+                <span class="step-number">08</span>
+            </div>
+
+            <div class="field">
+                <label for="methodePoseMurs">Méthode de pose</label>
+                <select id="methodePoseMurs">
+                    <option value="adhesive" selected>Ciment-colle</option>
+                    <option value="traditional">Mortier traditionnel</option>
+                </select>
+            </div>
+
+            <div class="sub-panel" id="parametresMortierMurs" hidden>
+
+                <h3>Mortier traditionnel des murs</h3>
+
+                <div class="form-grid three-cols">
+
+                    <div class="field">
+                        <label for="epaisseurMortierMurs">
+                            Épaisseur (cm)
+                        </label>
+                        <input type="number" id="epaisseurMortierMurs" min="0.1" step="0.1" value="1.5">
+                    </div>
+
+                    <div class="field">
+                        <label for="ratioCimentMurs">Dosage ciment</label>
+                        <input type="number" id="ratioCimentMurs" min="1" step="1" value="1">
+                    </div>
+
+                    <div class="field">
+                        <label for="ratioSableMurs">Dosage sable</label>
+                        <input type="number" id="ratioSableMurs" min="1" step="1" value="4">
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="sub-panel" id="parametresColleMurs">
+
+                <h3>Ciment-colle des murs</h3>
+
+                <div class="form-grid">
+
+                    <div class="field">
+                        <label for="consommationColleMurs">
+                            Consommation (kg/m²)
+                        </label>
+                        <input type="number" id="consommationColleMurs" min="0.1" step="0.1" value="4">
+                    </div>
+
+                    <div class="field">
+                        <label for="poidsSacColleMurs">
+                            Poids d'un sac (kg)
+                        </label>
+                        <input type="number" id="poidsSacColleMurs" min="1" step="1" value="25">
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             9. JOINTS ET ACCESSOIRES
+        ========================================== -->
+
+        <section class="panel no-print" id="sectionAccessoires">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">MATÉRIAUX COMPLÉMENTAIRES</p>
+                    <h2>Joints et accessoires de pose</h2>
+                </div>
+
+                <span class="step-number">09</span>
+            </div>
+
+            <p class="muted">
+                Estimation des produits complémentaires. Les consommations
+                restent ajustables selon le produit et les prescriptions du fabricant.
+            </p>
+
+            <div class="form-grid three-cols">
+
+                <div class="field">
+                    <label for="densiteJoint">
+                        Densité du produit de joint (kg/L)
+                    </label>
+                    <input type="number" id="densiteJoint" min="0.1" step="0.1" value="1.6">
+                </div>
+
+                <div class="field">
+                    <label for="margeJoint">Pertes des joints (%)</label>
+                    <input type="number" id="margeJoint" min="0" step="1" value="10">
+                </div>
+
+                <div class="field">
+                    <label for="poidsSacJoint">Poids d'un sac de joint (kg)</label>
+                    <input type="number" id="poidsSacJoint" min="0.1" step="0.1" value="5">
+                </div>
+
+                <div class="field">
+                    <label for="croisillonsParCarreau">
+                        Croisillons par carreau
+                    </label>
+                    <input type="number" id="croisillonsParCarreau" min="1" step="1" value="4">
+                </div>
+
+                <div class="field">
+                    <label for="clipsParCarreau">
+                        Clips de nivellement par carreau
+                    </label>
+                    <input type="number" id="clipsParCarreau" min="0" step="1" value="4">
+                </div>
+
+                <div class="field">
+                    <label for="margeAccessoires">
+                        Marge accessoires (%)
+                    </label>
+                    <input type="number" id="margeAccessoires" min="0" step="1" value="5">
+                </div>
+
+            </div>
+
+            <div class="sub-panel">
+
+                <h3>Produits complémentaires</h3>
+
+                <div class="form-grid three-cols">
+
+                    <div class="field">
+                        <label for="inclureCimentBlanc">
+                            <input type="checkbox" id="inclureCimentBlanc">
+                            Prévoir du ciment blanc
+                        </label>
+                    </div>
+
+                    <div class="field">
+                        <label for="inclureJointCarrelage">
+                            <input type="checkbox" id="inclureJointCarrelage" checked>
+                            Prévoir du produit de joint
+                        </label>
+                    </div>
+
+                    <div class="field">
+                        <label for="inclureCroisillons">
+                            <input type="checkbox" id="inclureCroisillons" checked>
+                            Prévoir des croisillons
+                        </label>
+                    </div>
+
+                    <div class="field">
+                        <label for="inclureClips">
+                            <input type="checkbox" id="inclureClips">
+                            Prévoir des clips de nivellement
+                        </label>
+                    </div>
+
+                    <div class="field">
+                        <label for="inclureCales">
+                            <input type="checkbox" id="inclureCales">
+                            Prévoir des cales et coins
+                        </label>
+                    </div>
+
+                </div>
+
+                <p class="disclaimer">
+                    Le ciment blanc et le produit de joint sont deux produits
+                    différents. Le choix dépend du type de finition et du fabricant.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             10. TRANSPORT ET LOGISTIQUE
+        ========================================== -->
+
+        <section class="panel no-print" id="sectionTransport">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">LOGISTIQUE DU CHANTIER</p>
+                    <h2>Transport des matériaux</h2>
+                </div>
+
+                <span class="step-number">10</span>
+            </div>
+
+            <div class="field">
+                <label for="modeTransport">Mode de calcul du transport</label>
+                <select id="modeTransport">
+                    <option value="trip">Prix par voyage</option>
+                    <option value="distance">Prix par kilomètre</option>
+                    <option value="fixed">Forfait global</option>
+                </select>
+            </div>
+
+            <div class="form-grid three-cols">
+
+                <div class="field">
+                    <label for="fournisseurMateriaux">
+                        Fournisseur / lieu d'achat
+                    </label>
+                    <input type="text" id="fournisseurMateriaux" placeholder="Nom du fournisseur">
+                </div>
+
+                <div class="field">
+                    <label for="destinationTransport">
+                        Destination / chantier
+                    </label>
+                    <input type="text" id="destinationTransport" placeholder="Adresse du chantier">
+                </div>
+
+                <div class="field">
+                    <label for="typeVehicule">Type de véhicule</label>
+                    <select id="typeVehicule">
+                        <option value="Camionnette">Camionnette</option>
+                        <option value="Pick-up">Pick-up</option>
+                        <option value="Camion léger">Camion léger</option>
+                        <option value="Camion moyen">Camion moyen</option>
+                        <option value="Autre">Autre</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="distanceTransport">
+                        Distance aller simple (km)
+                    </label>
+                    <input type="number" id="distanceTransport" min="0" step="0.1" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="nombreVoyages">Nombre de voyages</label>
+                    <input type="number" id="nombreVoyages" min="1" step="1" value="1">
+                </div>
+
+                <div class="field">
+                    <label for="capaciteVehicule">
+                        Capacité du véhicule (kg)
+                    </label>
+                    <input type="number" id="capaciteVehicule" min="0" step="1" placeholder="Facultatif">
+                </div>
+
+                <div class="field">
+                    <label for="poidsEstimeMateriaux">
+                        Poids estimé des matériaux (kg)
+                    </label>
+                    <input type="number" id="poidsEstimeMateriaux" min="0" step="1" placeholder="Facultatif">
+                </div>
+
+                <div class="field">
+                    <label for="tarifVoyage">Prix par voyage</label>
+                    <input type="number" id="tarifVoyage" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="tarifKilometre">Prix par kilomètre</label>
+                    <input type="number" id="tarifKilometre" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="forfaitTransport">Forfait transport</label>
+                    <input type="number" id="forfaitTransport" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="chargementTransport">
+                        Chargement et manutention
+                    </label>
+                    <input type="number" id="chargementTransport" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="autresFraisTransport">
+                        Autres frais logistiques
+                    </label>
+                    <input type="number" id="autresFraisTransport" min="0" step="0.01" value="0">
+                </div>
+
+            </div>
+
+            <p class="disclaimer">
+                Le nombre de voyages peut être estimé à partir de la capacité
+                du véhicule et du poids total des matériaux si ces données
+                sont renseignées.
+            </p>
+
+        </section>
+
+
+        <!-- =========================================
+             11. PRIX UNITAIRES DES MATÉRIAUX
+        ========================================== -->
+
+        <section class="panel no-print" id="sectionPrix">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">CHIFFRAGE</p>
+                    <h2>Prix unitaires des matériaux</h2>
+                </div>
+
+                <span class="step-number">11</span>
+            </div>
+
+            <p class="muted">
+                Saisissez les prix pratiqués par vos fournisseurs.
+                Les quantités calculées seront utilisées pour établir le devis.
+            </p>
+
+            <div class="form-grid three-cols">
+
+                <div class="field">
+                    <label for="prixCarreaux">Prix du carrelage (par m²)</label>
+                    <input type="number" id="prixCarreaux" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="prixPlinthes">Prix des plinthes (par m²)</label>
+                    <input type="number" id="prixPlinthes" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="prixFaience">Prix de la faïence (par m²)</label>
+                    <input type="number" id="prixFaience" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="prixCiment">Prix du sac de ciment</label>
+                    <input type="number" id="prixCiment" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="prixSable">Prix du sable (par tonne)</label>
+                    <input type="number" id="prixSable" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="prixCimentColle">
+                        Prix du sac de ciment-colle
+                    </label>
+                    <input type="number" id="prixCimentColle" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="prixCimentBlanc">
+                        Prix du sac de ciment blanc
+                    </label>
+                    <input type="number" id="prixCimentBlanc" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="prixJoint">Prix du sac de joint</label>
+                    <input type="number" id="prixJoint" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="prixCroisillons">
+                        Prix du paquet de croisillons
+                    </label>
+                    <input type="number" id="prixCroisillons" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="croisillonsParPaquet">
+                        Croisillons par paquet
+                    </label>
+                    <input type="number" id="croisillonsParPaquet" min="1" step="1" value="100">
+                </div>
+
+                <div class="field">
+                    <label for="prixClips">
+                        Prix du paquet de clips
+                    </label>
+                    <input type="number" id="prixClips" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="clipsParPaquet">
+                        Clips par paquet
+                    </label>
+                    <input type="number" id="clipsParPaquet" min="1" step="1" value="100">
+                </div>
+
+                <div class="field">
+                    <label for="prixCales">Prix des cales / coins</label>
+                    <input type="number" id="prixCales" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="prixMainOeuvre">
+                        Main-d'œuvre par m²
+                    </label>
+                    <input type="number" id="prixMainOeuvre" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="autresCouts">
+                        Autres coûts du chantier
+                    </label>
+                    <input type="number" id="autresCouts" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="margeBeneficiaire">
+                        Marge bénéficiaire (%)
+                    </label>
+                    <input type="number" id="margeBeneficiaire" min="0" step="0.1" value="0">
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             12. RÉCAPITULATIF DES RÉSULTATS
+        ========================================== -->
+
+        <section class="panel results-panel" id="sectionResultats">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">SYNTHÈSE TECHNIQUE ET FINANCIÈRE</p>
+                    <h2>Récapitulatif des résultats</h2>
+                </div>
+
+                <span class="step-number">12</span>
+            </div>
+
+            <p id="resultStatus" class="muted" aria-live="polite">
+                Les résultats apparaîtront ici après les calculs.
+            </p>
+
+            <div class="table-wrap">
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Désignation</th>
+                            <th>Quantité</th>
+                            <th>Unité</th>
+                            <th>Observations</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tableauResultats">
+                        <tr>
+                            <td colspan="4" class="empty-cell">
+                                Aucun calcul effectué pour le moment.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+
+            <p class="disclaimer">
+                Les quantités sont des estimations de métré. Elles doivent être
+                vérifiées sur le chantier avant toute commande de matériaux.
+            </p>
+
+        </section>
+
+
+        <!-- =========================================
+             13. DEVIS PROFESSIONNEL
+        ========================================== -->
+
+        <section class="panel no-print" id="sectionDevis">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">DOCUMENT COMMERCIAL</p>
+                    <h2>Établissement du devis</h2>
+                </div>
+
+                <span class="step-number">13</span>
+            </div>
+
+            <p class="muted">
+                Générez un devis détaillé avec les quantités, prix unitaires,
+                coûts des matériaux, main-d'œuvre et transport.
+            </p>
+
+            <div class="form-grid">
+
+                <div class="field">
+                    <label for="delaiExecution">
+                        Délai estimatif d'exécution
+                    </label>
+                    <input type="text" id="delaiExecution" placeholder="Ex. 10 jours ouvrables">
+                </div>
+
+                <div class="field">
+                    <label for="validiteDevis">
+                        Durée de validité du devis
+                    </label>
+                    <input type="text" id="validiteDevis" placeholder="Ex. 15 jours">
+                </div>
+
+            </div>
+
+            <div class="quote-actions">
+
+                <button type="button" class="button button-primary" id="genererDevis">
+                    Générer le devis
+                </button>
+
+                <button type="button" class="button button-secondary" id="imprimerDevis">
+                    Imprimer / Exporter en PDF
+                </button>
+
+            </div>
+
+            <div id="zoneDevis" class="quote-document" aria-live="polite">
+
+                <p class="muted">
+                    Le devis professionnel sera affiché ici après sa génération.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             14. SAUVEGARDE DES PROJETS
+        ========================================== -->
+
+        <section class="panel no-print" id="sectionSauvegarde">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">GESTION DES DONNÉES</p>
+                    <h2>Enregistrer et gérer les projets</h2>
+                </div>
+
+                <span class="step-number">14</span>
+            </div>
+
+            <div class="save-actions">
+
+                <button type="button" class="button button-primary" id="enregistrerProjet">
+                    Enregistrer le projet
+                </button>
+
+                <button type="button" class="button button-secondary" id="nouveauProjet">
+                    Nouveau projet
+                </button>
+
+                <button type="button" class="button button-ghost" id="exporterDonnees">
+                    Exporter les données JSON
+                </button>
+
+                <label for="importerDonnees" class="button button-secondary file-button">
+                    Importer un projet JSON
+                </label>
+
+                <input type="file" id="importerDonnees" accept=".json,application/json" hidden>
+
+            </div>
+
+            <div class="table-wrap">
+
+                <table class="data-table projects-table">
+
+                    <thead>
+                        <tr>
+                            <th>Projet</th>
+                            <th>Client</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="listeProjets">
+                        <tr>
+                            <td colspan="4" class="empty-cell">
+                                Aucun projet enregistré.
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <p class="storage-note">
+                Les projets sont enregistrés localement dans le navigateur
+                de cet appareil. Pensez à exporter régulièrement vos données
+                JSON pour conserver une copie de sauvegarde.
+            </p>
+
+        </section>
+
+
+        <!-- =========================================
+             15. INFORMATIONS COMMERCIALES
+        ========================================== -->
+
+        <section class="commercial-note no-print">
+
+            <div>
+                <span class="pro-icon">KIJ</span>
+
+                <div>
+                    <strong>KIJ Carrelage Pro</strong>
+                    <p>
+                        Une solution conçue pour faciliter les métrés,
+                        les estimations et la préparation des devis BTP.
+                    </p>
+                </div>
+            </div>
+
+            <span class="edition-tag">OUTIL BTP</span>
+
+        </section>
 
     </main>
 
-    <footer>
-        
-        <p>&copy; <span id="currentyear"></span> 👷‍♂️ Joe Kabusako Iviti, Etudiant a BYU-Idaho En BS Software
-            Development 👷‍♂️ Congo-Kinshasa. All rights reserved.</p>
-        <p id="lastModified"></p>
 
-        <p>Whatsap: +243890119831</p>
-        <p>Email:joekabusako@gmail.com</p>
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+
+    <footer class="site-footer">
+
+        <div class="footer-brand">
+            <img src="images/kij-logo.svg" alt="" loading="lazy">
+            <strong>KIJ CARRELAGE PRO</strong>
+        </div>
+
+        <p>
+            Développé par Ingénieur Joe Kabusako Iviti.
+        </p>
+
+        <p>
+            Contact :
+            <a href="mailto:joekabusako@gmail.com">
+                joekabusako@gmail.com
+            </a>
+        </p>
+
+        <p>
+            WhatsApp :
+            <a href="https://wa.me/243890119831" target="_blank" rel="noopener noreferrer">
+                +243 890 119 831
+            </a>
+        </p>
+
+        <small>
+            © <span id="currentyear"></span> KIJ Carrelage Pro.
+            Tous droits réservés.
+        </small>
+
+        <small>
+            Dernière modification :
+            <span id="lastModified"></span>
+        </small>
+
     </footer>
+
+
+    <!-- =========================================
+         NOTIFICATIONS
+    ========================================== -->
+
+    <div id="notification" class="notification" role="status" aria-live="polite"></div>
+
 </body>
 
 </html>
